@@ -73,6 +73,45 @@ const capabilities = [
   },
 ];
 
+const comparisonRows = [
+  {
+    label: "Pricing model",
+    superpen: "No subscription in the current alpha early-access build",
+    epicPen: "Epic Pen Pro starts with a 14-day trial, then paid billing",
+    winner: "superpen",
+  },
+  {
+    label: "Math-ready shape library",
+    superpen: "48 built-in math shapes from the current app library",
+    epicPen: "No built-in math shape library listed publicly",
+    winner: "superpen",
+  },
+  {
+    label: "Custom shape creation",
+    superpen: "Create and save your own reusable custom shapes",
+    epicPen: "No comparable custom shape creation flow listed publicly",
+    winner: "superpen",
+  },
+  {
+    label: "Color workflow",
+    superpen: "Custom color picker in the app, plus persistent settings",
+    epicPen: "Expanded colors and custom quick colors are described as Pro features",
+    winner: "superpen",
+  },
+  {
+    label: "Core annotation tools",
+    superpen: "Pen, highlight, text, screenshots, board mode, shapes, math shapes, fading ink",
+    epicPen: "Pen, highlighter, screenshots, text, shapes, whiteboard and blackboard, fading ink",
+    winner: "both",
+  },
+  {
+    label: "Power-user customization",
+    superpen: "Editable shortcuts, theme options, smoothing, saved preferences, custom shapes",
+    epicPen: "Hotkey support and Pro customization options are documented publicly",
+    winner: "superpen",
+  },
+];
+
 const faq = [
   {
     question: "Who is Superpen for?",
@@ -168,6 +207,80 @@ export default function Home() {
               </Reveal>
             ))}
           </div>
+        </section>
+
+        <section className="section" aria-labelledby="comparison-title">
+          <Reveal className="section-heading">
+            <span className="kicker">Superpen vs Epic Pen</span>
+            <h2 id="comparison-title">The comparison gets interesting when you look past basic screen ink.</h2>
+            <p>
+              Epic Pen is established and polished, but Superpen already pulls ahead in
+              the areas that matter most for math-heavy explanation and deeper
+              customization.
+            </p>
+          </Reveal>
+
+          <Reveal className="comparison-spotlight">
+            <div className="comparison-copy">
+              <span className="comparison-kicker">Why Superpen stands out</span>
+              <h3>More built in, less paywall, and far more math-first tooling.</h3>
+              <p>
+                The strongest current advantages are straightforward: no subscription,
+                48 built-in math shapes, reusable custom-shape creation, and a more
+                ambitious annotation workflow than the usual pen-plus-highlighter setup.
+              </p>
+            </div>
+
+            <div className="comparison-badges" aria-label="Superpen advantages">
+              <span>No subscription</span>
+              <span>48 math shapes</span>
+              <span>Saved custom shapes</span>
+              <span>Custom colors</span>
+              <span>Board mode</span>
+              <span>Editable shortcuts</span>
+            </div>
+          </Reveal>
+
+          <div className="comparison-table" role="table" aria-label="Superpen compared with Epic Pen">
+            <div className="comparison-head comparison-row" role="row">
+              <span role="columnheader">Category</span>
+              <span role="columnheader" className="is-superpen">
+                Superpen
+              </span>
+              <span role="columnheader">Epic Pen</span>
+            </div>
+
+            {comparisonRows.map((row, index) => (
+              <Reveal key={row.label} delay={index * 0.06}>
+                <div
+                  className={
+                    row.winner === "superpen"
+                      ? "comparison-row is-winning"
+                      : row.winner === "both"
+                        ? "comparison-row is-balanced"
+                        : "comparison-row"
+                  }
+                  role="row"
+                >
+                  <div className="comparison-cell comparison-category" role="cell">
+                    <strong>{row.label}</strong>
+                  </div>
+                  <div className="comparison-cell comparison-superpen" role="cell">
+                    <span className="comparison-pill">Superpen leads</span>
+                    <p>{row.superpen}</p>
+                  </div>
+                  <div className="comparison-cell" role="cell">
+                    <p>{row.epicPen}</p>
+                  </div>
+                </div>
+              </Reveal>
+            ))}
+          </div>
+
+          <Reveal className="comparison-note">
+            Comparison reflects the current Superpen repository and Epic Pen&apos;s public
+            features, user-guide, and pricing pages.
+          </Reveal>
         </section>
 
         <section className="section" aria-labelledby="workflow-title">
