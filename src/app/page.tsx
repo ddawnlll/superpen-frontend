@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Script from "next/script";
 import Hero from "./Hero";
+import Navbar from "./Navbar";
 import Reveal from "./Reveal";
 
 const features = [
@@ -138,7 +139,8 @@ export default function Home() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(softwareStructuredData) }}
       />
 
-      <main className="superpen-shell">
+      <main id="top" className="superpen-shell">
+        <Navbar />
         <Hero />
 
         <section className="section section-soft" aria-labelledby="features-title">
