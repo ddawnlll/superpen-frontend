@@ -7,28 +7,33 @@ const demoModes = [
   {
     id: "annotate",
     label: "Annotate",
-    badge: "Lesson mode",
-    note: "Circle mistakes, underline steps, and highlight key ideas in seconds.",
+    badge: "Pen overlay",
+    note: "The toolbar floats above your desktop while the canvas stays transparent over the content underneath.",
     colorClass: "is-coral",
-    path: "M50 240 C150 190, 200 190, 290 165 S435 120, 540 92",
+    activeTool: "Pen",
+    status: "Click-through outside toolbar",
   },
   {
-    id: "graph",
-    label: "Graph",
-    badge: "Graph mode",
-    note: "Sketch curves and explain how every point moves without opening a heavy toolset.",
+    id: "screenshot",
+    label: "Screenshot",
+    badge: "Capture flow",
+    note: "Drag a region, then copy it to the clipboard or save it to your computer from the inline action bar.",
     colorClass: "is-mint",
-    path: "M80 250 C145 230, 180 172, 230 145 S340 160, 385 216 S470 290, 530 235",
+    activeTool: "Shot",
+    status: "Selection ready",
   },
   {
-    id: "geometry",
-    label: "Geometry",
-    badge: "Shape mode",
-    note: "Walk through angles and forms with clean shapes that keep the screen calm and readable.",
+    id: "board",
+    label: "Board",
+    badge: "Board mode",
+    note: "Board mode gives you a focused background for live explanation while keeping the same tools close by.",
     colorClass: "is-gold",
-    path: "M145 250 L290 110 L448 250 Z",
+    activeTool: "Board",
+    status: "Black board active",
   },
-];
+] as const;
+
+const toolbarButtons = ["Cursor", "Pen", "Erase", "Select", "Shot", "Shape", "Board"] as const;
 
 const fadeUp = {
   initial: { opacity: 0, y: 28 },
@@ -50,14 +55,16 @@ export default function Hero() {
 
       <div className="hero-layout">
         <motion.div className="hero-copy" {...fadeUp}>
-          <span className="pill">Friendly digital whiteboard for math</span>
+          <span className="pill">Screen annotation overlay</span>
           <h1>
-            Superpen helps teachers and students
-            <span> draw ideas with warmth.</span>
+            Superpen lets you
+            <span> draw over anything on screen.</span>
           </h1>
+          <p className="hero-meta">Qt-based. Alpha early access.</p>
           <p className="hero-summary">
-            Annotate any screen, explain equations in real time, and keep the
-            interface gentle enough for students while staying fast for teaching.
+            A desktop overlay for pen input, highlighting, text, shapes,
+            screenshots, and fast live explanation, with the product heading
+            toward a broader cross-platform release.
           </p>
 
           <div className="hero-actions">
@@ -70,9 +77,9 @@ export default function Hero() {
           </div>
 
           <ul className="hero-points" aria-label="Key product benefits">
-            <li>Live drawing over slides, browsers, and PDFs</li>
-            <li>Quick highlights for formulas, graphs, and worked examples</li>
-            <li>Minimal toolbar that stays out of the way</li>
+            <li>Live markup over slides, browsers, PDFs, and apps</li>
+            <li>Pen, phosphor highlighter, text, shapes, and screenshots</li>
+            <li>Floating toolbar with saved settings and shortcuts</li>
           </ul>
         </motion.div>
 
@@ -101,91 +108,226 @@ export default function Hero() {
             ))}
           </div>
 
-          <div className="demo-stage">
+          <div className={`demo-stage demo-stage-${activeMode.id}`}>
             <div className="grid-surface" aria-hidden="true" />
 
-            <div className="equation-card">
-              <span className="equation-label">Example lesson</span>
-              <p>y = x^2 - 4x + 3</p>
+            <div className="demo-underlay">
+              <div className="demo-window">
+                <div className="demo-window-bar">
+                  <span className="demo-window-title">Shared screen</span>
+                  <span className="demo-window-tab">Lesson notes</span>
+                </div>
+
+                <div className="demo-window-body">
+                  <div className="demo-sidebar">
+                    <span className="demo-sidebar-chip active">Algebra</span>
+                    <span className="demo-sidebar-chip">Screenshots</span>
+                    <span className="demo-sidebar-chip">Custom shapes</span>
+                  </div>
+
+                  <div className="demo-content">
+                    <div className="demo-content-card">
+                      <span className="demo-content-label">Visible underneath Superpen</span>
+                      <h3>Quadratic review</h3>
+                      <p>Factor the expression and show each step clearly.</p>
+                    </div>
+
+                    <div className="demo-lines" aria-hidden="true">
+                      <span />
+                      <span />
+                      <span />
+                      <span />
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
 
-            <svg
-              viewBox="0 0 620 320"
-              className="demo-svg"
-              role="img"
-              aria-label="Animated drawing preview of the Superpen app"
-            >
-              <line x1="70" y1="270" x2="550" y2="270" className="axis-line" />
-              <line x1="130" y1="55" x2="130" y2="280" className="axis-line" />
+            <div className="overlay-header">
+              <div className="overlay-chip">
+                <span className="overlay-chip-label">Active tool</span>
+                <strong>{activeMode.activeTool}</strong>
+              </div>
+              <div className="overlay-chip">
+                <span className="overlay-chip-label">Overlay state</span>
+                <strong>{activeMode.status}</strong>
+              </div>
+            </div>
 
-              {activeMode.id === "geometry" ? (
-                <>
+            <div className="overlay-toolbar-panel" aria-hidden="true">
+              {toolbarButtons.map((button) => (
+                <span
+                  key={button}
+                  className={
+                    button === activeMode.activeTool
+                      ? "overlay-tool-button active"
+                      : "overlay-tool-button"
+                  }
+                >
+                  {button}
+                </span>
+              ))}
+
+              <div className="overlay-toolbar-meta">
+                <div className="overlay-swatch">
+                  <span className="overlay-swatch-dot" />
+                  <strong>#FF4444</strong>
+                </div>
+                <div className="overlay-size">
+                  <span className="overlay-size-dot" />
+                  <strong>3 px</strong>
+                </div>
+              </div>
+            </div>
+
+            {activeMode.id === "annotate" && (
+              <motion.svg
+                key="annotate-canvas"
+                viewBox="0 0 620 360"
+                className="demo-svg"
+                role="img"
+                aria-label="Preview of Superpen drawing over a shared screen"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.35 }}
+              >
+                <motion.path
+                  d="M188 167 C248 131, 311 121, 374 126 S493 151, 541 191"
+                  fill="none"
+                  stroke="rgba(255, 228, 92, 0.34)"
+                  strokeWidth="26"
+                  strokeLinecap="round"
+                  initial={{ pathLength: 0 }}
+                  animate={{ pathLength: 1 }}
+                  transition={{ duration: 1.1, ease: "easeOut" }}
+                />
+                <motion.path
+                  d="M176 178 C235 157, 318 150, 400 161 S508 186, 548 204"
+                  fill="none"
+                  stroke="#ff4444"
+                  strokeWidth="8"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  initial={{ pathLength: 0 }}
+                  animate={{ pathLength: 1 }}
+                  transition={{ duration: 1.2, ease: "easeOut", delay: 0.15 }}
+                />
+                <motion.path
+                  d="M318 108 L318 238"
+                  fill="none"
+                  stroke="#ff7a59"
+                  strokeWidth="6"
+                  strokeLinecap="round"
+                  initial={{ pathLength: 0 }}
+                  animate={{ pathLength: 1 }}
+                  transition={{ duration: 0.8, ease: "easeOut", delay: 0.4 }}
+                />
+                <motion.circle
+                  cx="318"
+                  cy="175"
+                  r="58"
+                  fill="none"
+                  stroke="#ff7f66"
+                  strokeWidth="7"
+                  strokeDasharray="8 10"
+                  initial={{ scale: 0.6, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  transition={{ duration: 0.45, delay: 0.45 }}
+                />
+                <text x="355" y="112" className="demo-canvas-text">
+                  explain this step
+                </text>
+              </motion.svg>
+            )}
+
+            {activeMode.id === "screenshot" && (
+              <>
+                <div className="screenshot-selection" aria-hidden="true">
+                  <span className="selection-handle top-left" />
+                  <span className="selection-handle top-right" />
+                  <span className="selection-handle bottom-left" />
+                  <span className="selection-handle bottom-right" />
+                </div>
+
+                <motion.div
+                  key="screenshot-actions"
+                  className="screenshot-actions-bar"
+                  initial={{ opacity: 0, y: 12 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.35 }}
+                >
+                  <span>Copy</span>
+                  <span>Save</span>
+                  <span>Cancel</span>
+                </motion.div>
+              </>
+            )}
+
+            {activeMode.id === "board" && (
+              <>
+                <motion.svg
+                  key="board-canvas"
+                  viewBox="0 0 620 360"
+                  className="demo-svg board-overlay"
+                  role="img"
+                  aria-label="Preview of Superpen board mode"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ duration: 0.35 }}
+                >
                   <motion.path
-                    d={activeMode.path}
-                    fill="rgba(253, 214, 113, 0.16)"
-                    stroke="#f4a20d"
-                    strokeWidth="8"
+                    d="M150 244 C207 191, 274 157, 331 139 S457 120, 527 158"
+                    fill="none"
+                    stroke="#f2f2f2"
+                    strokeWidth="7"
                     strokeLinecap="round"
                     strokeLinejoin="round"
                     initial={{ pathLength: 0 }}
                     animate={{ pathLength: 1 }}
                     transition={{ duration: 1.1, ease: "easeOut" }}
                   />
-                  <motion.circle
-                    cx="290"
-                    cy="110"
-                    r="10"
-                    fill="#f4a20d"
-                    initial={{ scale: 0.2, opacity: 0 }}
-                    animate={{ scale: 1, opacity: 1 }}
-                    transition={{ duration: 0.45, delay: 0.6 }}
+                  <motion.path
+                    d="M229 242 L318 119 L417 242"
+                    fill="none"
+                    stroke="#ff7a59"
+                    strokeWidth="7"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    initial={{ pathLength: 0 }}
+                    animate={{ pathLength: 1 }}
+                    transition={{ duration: 0.9, ease: "easeOut", delay: 0.2 }}
                   />
-                </>
-              ) : (
-                <motion.path
-                  key={activeMode.id}
-                  d={activeMode.path}
-                  fill="none"
-                  stroke={activeMode.id === "annotate" ? "#ff7f66" : "#37b88f"}
-                  strokeWidth="10"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  initial={{ pathLength: 0 }}
-                  animate={{ pathLength: 1 }}
-                  transition={{ duration: 1.2, ease: "easeOut" }}
-                />
-              )}
+                  <text x="188" y="96" className="demo-canvas-text board-text">
+                    board mode on
+                  </text>
+                </motion.svg>
 
-              <motion.circle
-                cx="445"
-                cy="146"
-                r="26"
-                className="focus-ring"
-                initial={{ scale: 0.6, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                transition={{ duration: 0.5, delay: 0.2 }}
-              />
-            </svg>
-
-            <motion.div
-              key={activeMode.id}
-              className={`note-card ${activeMode.colorClass}`}
-              initial={{ opacity: 0, y: 18 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.45 }}
-            >
-              <strong>{activeMode.label}</strong>
-              <p>{activeMode.note}</p>
-            </motion.div>
+                <div className="board-pill">
+                  <span className="board-pill-dot" />
+                  <strong>Background: black board</strong>
+                </div>
+              </>
+            )}
           </div>
+
+          <motion.div
+            key={activeMode.id}
+            className={`demo-note-row note-card ${activeMode.colorClass}`}
+            initial={{ opacity: 0, y: 18 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.45 }}
+          >
+            <strong>{activeMode.label}</strong>
+            <p>{activeMode.note}</p>
+          </motion.div>
 
           <div className="mini-toolbar" aria-hidden="true">
             <span className="tool-dot active" />
             <span className="tool-dot" />
             <span className="tool-dot" />
-            <span className="tool-pill">Pen</span>
-            <span className="tool-pill">Highlighter</span>
-            <span className="tool-pill">Shapes</span>
+            <span className="tool-pill">Click-through</span>
+            <span className="tool-pill">Saved settings</span>
+            <span className="tool-pill">Floating toolbar</span>
           </div>
         </motion.div>
       </div>

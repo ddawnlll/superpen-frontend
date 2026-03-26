@@ -4,73 +4,70 @@ import Hero from "./Hero";
 
 const features = [
   {
-    title: "Draw over anything",
+    title: "Annotate on top of your screen",
     description:
-      "Annotate slides, PDFs, browser lessons, and whiteboard apps without interrupting the flow of class.",
+      "Superpen runs as a transparent overlay so you can draw over slides, PDFs, websites, videos, and apps without breaking your flow.",
   },
   {
-    title: "Math-first tools",
+    title: "Switch tools fast",
     description:
-      "Clean strokes, quick highlights, and simple shapes help teachers explain equations, graphs, and geometry faster.",
+      "Jump between cursor, pen, phosphor highlighter, shapes, text, selection, screenshot, and eraser from one floating toolbar.",
   },
   {
-    title: "Gentle, minimal UI",
+    title: "Built-in teaching utilities",
     description:
-      "Students stay focused on the lesson while teachers get the tools they need in one calm floating toolbar.",
+      "Use board mode, fading ink, math shapes, saved custom shapes, editable shortcuts, and persistent settings without opening a heavy design app.",
   },
 ];
 
 const steps = [
   {
-    title: "Open Superpen",
+    title: "Launch the overlay",
     description:
-      "Launch the app in seconds and keep it ready while teaching live, recording, or tutoring online.",
+      "Open Superpen and keep the toolbar available while the rest of your desktop stays visible underneath.",
   },
   {
-    title: "Pick a tool",
+    title: "Draw, type, or capture",
     description:
-      "Switch from pen to highlighter to shapes with a small friendly toolbar that stays out of the way.",
+      "Write freehand, drop in text, place geometry and math shapes, select regions, or capture screenshots to the clipboard or to a file.",
   },
   {
-    title: "Explain clearly",
+    title: "Keep your setup the way you like it",
     description:
-      "Circle mistakes, sketch graphs, underline formulas, and keep every idea visible as you teach.",
+      "Your color, pen size, theme, language, shortcuts, custom shapes, and other preferences are saved between sessions.",
   },
 ];
 
 const audiences = [
   {
-    title: "For teachers",
+    title: "For teaching and tutoring",
     description:
-      "Make algebra, calculus, and geometry feel more human with fast visual explanations during class or tutoring.",
-    points: ["Live lessons", "Recorded walkthroughs", "Slide annotation"],
+      "Explain directly on top of slides, browser tabs, worksheets, and shared screens without switching into a separate whiteboard app.",
+    points: ["Live classes", "Online tutoring", "Recorded walkthroughs"],
   },
   {
-    title: "For students",
+    title: "For demos and presentations",
     description:
-      "Solve problems on-screen, mark up examples, and review lessons with a drawing tool that feels easy from day one.",
-    points: ["Homework help", "Exam prep", "Collaborative study"],
+      "Use Superpen as a fast desktop annotation layer when you need to highlight, label, or sketch over any application in real time.",
+    points: ["Product demos", "Screen annotation", "Explainers"],
   },
 ];
 
-const testimonials = [
+const capabilities = [
   {
-    quote:
-      "My students finally stay with the graph instead of getting lost in the menus.",
-    name: "Mina",
-    role: "High school math teacher",
+    title: "Math and shape tools",
+    description:
+      "Rectangle, ellipse, line, arrow, triangle, math presets, and reusable custom shapes are all part of the app.",
   },
   {
-    quote:
-      "It feels playful, but it is still fast enough for real tutoring sessions.",
-    name: "Daniel",
-    role: "Private SAT math tutor",
+    title: "Screenshot workflow",
+    description:
+      "Select a region and send it to the clipboard or save it to your computer from inside the overlay.",
   },
   {
-    quote:
-      "I use it while revising problem sets and it makes online study sessions way less awkward.",
-    name: "Sara",
-    role: "Engineering student",
+    title: "Personalized workspace",
+    description:
+      "Dark and light themes, icon toggle, smoothing control, board colors, and editable shortcuts make the toolbar fit your setup.",
   },
 ];
 
@@ -78,31 +75,32 @@ const faq = [
   {
     question: "Who is Superpen for?",
     answer:
-      "Superpen is built for math teachers, tutors, and students who need a quick way to draw, highlight, and explain on top of any screen.",
+      "Superpen is for anyone who needs a fast desktop annotation overlay, especially teachers, tutors, presenters, and people explaining ideas live on screen.",
   },
   {
-    question: "What makes it different?",
+    question: "What can it do today?",
     answer:
-      "The focus is speed and warmth: a friendly interface, low-friction drawing tools, and a classroom-first experience instead of a giant design suite.",
+      "The current alpha build includes pen and highlighter tools, text, shapes, math shapes, custom shapes, selection, screenshots, board mode, fading ink, themes, shortcuts, saved settings, and English or Turkish language support.",
   },
   {
-    question: "Can visitors try it quickly?",
+    question: "Which platform does this frontend describe?",
     answer:
-      "Yes. The site is designed to drive trial with a clear download CTA and an interactive preview that shows how the app feels before install.",
+      "This page reflects the current Windows desktop build in the repository. Superpen is built with Qt, and the product direction is cross-platform even though the active build shown here is still focused on Windows today.",
   },
 ];
 
 export const metadata: Metadata = {
-  title: "Superpen | Friendly digital whiteboard for math teaching",
+  title: "Superpen | Qt screen annotation overlay in alpha early access",
   description:
-    "Superpen is a warm, intuitive digital whiteboard app for math teachers and students. Draw in real time, annotate any screen, and teach with a calm minimal UI.",
+    "Superpen is a Qt-based screen annotation overlay in alpha early access with pen, highlighter, text, shapes, screenshots, board mode, shortcuts, and saved settings.",
   keywords: [
     "Superpen",
-    "digital whiteboard",
-    "math teacher app",
+    "screen annotation overlay",
+    "desktop annotation app",
+    "Windows annotation tool",
     "screen annotation tool",
-    "teaching app for math",
     "drawing overlay app",
+    "presentation annotation app",
     "annotation software",
   ],
   alternates: {
@@ -114,25 +112,20 @@ const softwareStructuredData = {
   "@context": "https://schema.org",
   "@type": "SoftwareApplication",
   name: "Superpen",
-  applicationCategory: "EducationalApplication",
-  operatingSystem: "Windows, macOS",
+  applicationCategory: "UtilitiesApplication",
+  operatingSystem: "Windows",
   description:
-    "A friendly digital whiteboard app for math teachers and students with live drawing, easy annotation, and a minimal interface.",
+    "A Qt-based desktop overlay in alpha early access for drawing, highlighting, adding text, placing shapes, and capturing screenshots on top of any screen.",
+  softwareVersion: "1.0.0-alpha",
   offers: {
     "@type": "Offer",
     price: "0",
     priceCurrency: "USD",
   },
-  audience: [
-    {
-      "@type": "EducationalAudience",
-      educationalRole: "teacher",
-    },
-    {
-      "@type": "EducationalAudience",
-      educationalRole: "student",
-    },
-  ],
+  audience: {
+    "@type": "Audience",
+    audienceType: "Teachers, tutors, presenters, and desktop users who annotate on screen",
+  },
 };
 
 export default function Home() {
@@ -149,11 +142,13 @@ export default function Home() {
 
         <section className="section section-soft" aria-labelledby="features-title">
           <div className="section-heading">
-            <span className="kicker">Why teachers pick Superpen</span>
-            <h2 id="features-title">Simple enough for class. Smart enough for math.</h2>
+            <span className="kicker">What Superpen actually is</span>
+            <h2 id="features-title">A lightweight overlay for live annotation on top of your desktop.</h2>
             <p>
-              Every part of the experience is tuned for explaining ideas quickly,
-              clearly, and with less friction.
+              Superpen is built with Qt and currently ships as an alpha early-access
+              desktop app. The product is closer to a fast on-screen markup layer
+              than a full whiteboard suite, which is exactly what makes it useful
+              during live work.
             </p>
           </div>
 
@@ -173,11 +168,11 @@ export default function Home() {
         <section className="section" aria-labelledby="workflow-title">
           <div className="two-column">
             <div className="section-heading section-heading-left">
-              <span className="kicker">Teaching flow</span>
-              <h2 id="workflow-title">Built for quick explanations, not complicated setup.</h2>
+              <span className="kicker">How it works</span>
+              <h2 id="workflow-title">Built around fast desktop markup, not heavyweight canvas setup.</h2>
               <p>
-                Superpen helps teachers stay present with students. Open it, draw
-                naturally, and move on with the lesson.
+                Superpen stays out of the way until you need it, then gives you
+                the right tool quickly for explanation, annotation, or capture.
               </p>
             </div>
 
@@ -197,11 +192,12 @@ export default function Home() {
 
         <section className="section section-soft" aria-labelledby="audience-title">
           <div className="section-heading">
-            <span className="kicker">Made for real classrooms</span>
-            <h2 id="audience-title">Warm enough for students. Fast enough for teachers.</h2>
+            <span className="kicker">Where it fits</span>
+            <h2 id="audience-title">Useful anywhere you need to mark up a live screen.</h2>
             <p>
-              The same product supports lesson delivery, tutoring, homework help,
-              and revision without feeling too technical or too childish.
+              The current app clearly leans toward teaching workflows, but the
+              core interaction model works for any on-screen explanation task and is
+              being shaped toward a broader cross-platform release over time.
             </p>
           </div>
 
@@ -220,25 +216,23 @@ export default function Home() {
           </div>
         </section>
 
-        <section className="section" aria-labelledby="testimonials-title">
+        <section className="section" aria-labelledby="capabilities-title">
           <div className="section-heading">
-            <span className="kicker">Early feedback</span>
-            <h2 id="testimonials-title">A friendlier feel for digital teaching.</h2>
+            <span className="kicker">Core capabilities</span>
+            <h2 id="capabilities-title">The app already includes more than basic pen input.</h2>
             <p>
-              The product direction is all about making online explanation feel
-              lighter, clearer, and more inviting.
+              These are implemented parts of the product, not placeholder ideas for later.
             </p>
           </div>
 
           <div className="testimonial-grid">
-            {testimonials.map((testimonial) => (
-              <figure key={testimonial.name} className="testimonial-card">
-                <blockquote>{testimonial.quote}</blockquote>
+            {capabilities.map((capability) => (
+              <article key={capability.title} className="testimonial-card">
+                <blockquote>{capability.description}</blockquote>
                 <figcaption>
-                  <strong>{testimonial.name}</strong>
-                  <span>{testimonial.role}</span>
+                  <strong>{capability.title}</strong>
                 </figcaption>
-              </figure>
+              </article>
             ))}
           </div>
         </section>
@@ -246,10 +240,9 @@ export default function Home() {
         <section className="section section-soft" aria-labelledby="faq-title">
           <div className="section-heading">
             <span className="kicker">FAQ</span>
-            <h2 id="faq-title">Everything a curious visitor needs in one scroll.</h2>
+            <h2 id="faq-title">Plain-language answers based on the repository as it exists today.</h2>
             <p>
-              The page is structured to support SEO, trust, and a clear path into
-              trying the app.
+              The goal here is clarity, not inflated product positioning.
             </p>
           </div>
 
@@ -266,19 +259,19 @@ export default function Home() {
         <section id="download" className="section cta-section" aria-labelledby="cta-title">
           <div className="cta-panel">
             <div>
-              <span className="kicker">Ready to launch</span>
-              <h2 id="cta-title">Help people explain math with more warmth and less friction.</h2>
+              <span className="kicker">Current build</span>
+              <h2 id="cta-title">Superpen is a Qt-based alpha early-access overlay for drawing and explaining on screen.</h2>
               <p>
-                Superpen gives teachers and students an inviting way to draw,
-                annotate, and understand together.
+                The page now reflects the current Windows build while leaving room
+                for the broader cross-platform direction of the product.
               </p>
             </div>
             <div className="cta-actions">
               <a className="primary-button" href="#">
-                Download Superpen
+                Download for Windows
               </a>
               <a className="secondary-button" href="#demo">
-                View the interactive demo
+                View the preview
               </a>
             </div>
           </div>
