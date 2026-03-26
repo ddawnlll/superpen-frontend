@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Script from "next/script";
 import Hero from "./Hero";
+import Reveal from "./Reveal";
 
 const features = [
   {
@@ -141,7 +142,7 @@ export default function Home() {
         <Hero />
 
         <section className="section section-soft" aria-labelledby="features-title">
-          <div className="section-heading">
+          <Reveal className="section-heading">
             <span className="kicker">What Superpen actually is</span>
             <h2 id="features-title">A lightweight overlay for live annotation on top of your desktop.</h2>
             <p>
@@ -150,48 +151,52 @@ export default function Home() {
               than a full whiteboard suite, which is exactly what makes it useful
               during live work.
             </p>
-          </div>
+          </Reveal>
 
           <div className="feature-grid">
-            {features.map((feature) => (
-              <article key={feature.title} className="feature-card">
-                <div className="feature-icon" aria-hidden="true">
-                  <span />
-                </div>
-                <h3>{feature.title}</h3>
-                <p>{feature.description}</p>
-              </article>
+            {features.map((feature, index) => (
+              <Reveal key={feature.title} delay={index * 0.08}>
+                <article className="feature-card">
+                  <div className="feature-icon" aria-hidden="true">
+                    <span />
+                  </div>
+                  <h3>{feature.title}</h3>
+                  <p>{feature.description}</p>
+                </article>
+              </Reveal>
             ))}
           </div>
         </section>
 
         <section className="section" aria-labelledby="workflow-title">
           <div className="two-column">
-            <div className="section-heading section-heading-left">
+            <Reveal className="section-heading section-heading-left">
               <span className="kicker">How it works</span>
               <h2 id="workflow-title">Built around fast desktop markup, not heavyweight canvas setup.</h2>
               <p>
                 Superpen stays out of the way until you need it, then gives you
                 the right tool quickly for explanation, annotation, or capture.
               </p>
-            </div>
+            </Reveal>
 
             <div className="step-list">
               {steps.map((step, index) => (
-                <article key={step.title} className="step-card">
-                  <div className="step-number">{index + 1}</div>
-                  <div>
-                    <h3>{step.title}</h3>
-                    <p>{step.description}</p>
-                  </div>
-                </article>
+                <Reveal key={step.title} delay={index * 0.08}>
+                  <article className="step-card">
+                    <div className="step-number">{index + 1}</div>
+                    <div>
+                      <h3>{step.title}</h3>
+                      <p>{step.description}</p>
+                    </div>
+                  </article>
+                </Reveal>
               ))}
             </div>
           </div>
         </section>
 
         <section className="section section-soft" aria-labelledby="audience-title">
-          <div className="section-heading">
+          <Reveal className="section-heading">
             <span className="kicker">Where it fits</span>
             <h2 id="audience-title">Useful anywhere you need to mark up a live screen.</h2>
             <p>
@@ -199,65 +204,71 @@ export default function Home() {
               core interaction model works for any on-screen explanation task and is
               being shaped toward a broader cross-platform release over time.
             </p>
-          </div>
+          </Reveal>
 
           <div className="audience-grid">
-            {audiences.map((audience) => (
-              <article key={audience.title} className="audience-card">
-                <h3>{audience.title}</h3>
-                <p>{audience.description}</p>
-                <ul>
-                  {audience.points.map((point) => (
-                    <li key={point}>{point}</li>
-                  ))}
-                </ul>
-              </article>
+            {audiences.map((audience, index) => (
+              <Reveal key={audience.title} delay={index * 0.08}>
+                <article className="audience-card">
+                  <h3>{audience.title}</h3>
+                  <p>{audience.description}</p>
+                  <ul>
+                    {audience.points.map((point) => (
+                      <li key={point}>{point}</li>
+                    ))}
+                  </ul>
+                </article>
+              </Reveal>
             ))}
           </div>
         </section>
 
         <section className="section" aria-labelledby="capabilities-title">
-          <div className="section-heading">
+          <Reveal className="section-heading">
             <span className="kicker">Core capabilities</span>
             <h2 id="capabilities-title">The app already includes more than basic pen input.</h2>
             <p>
               These are implemented parts of the product, not placeholder ideas for later.
             </p>
-          </div>
+          </Reveal>
 
           <div className="testimonial-grid">
-            {capabilities.map((capability) => (
-              <article key={capability.title} className="testimonial-card">
-                <blockquote>{capability.description}</blockquote>
-                <figcaption>
-                  <strong>{capability.title}</strong>
-                </figcaption>
-              </article>
+            {capabilities.map((capability, index) => (
+              <Reveal key={capability.title} delay={index * 0.08}>
+                <article className="testimonial-card">
+                  <blockquote>{capability.description}</blockquote>
+                  <figcaption>
+                    <strong>{capability.title}</strong>
+                  </figcaption>
+                </article>
+              </Reveal>
             ))}
           </div>
         </section>
 
         <section className="section section-soft" aria-labelledby="faq-title">
-          <div className="section-heading">
+          <Reveal className="section-heading">
             <span className="kicker">FAQ</span>
             <h2 id="faq-title">Plain-language answers based on the repository as it exists today.</h2>
             <p>
               The goal here is clarity, not inflated product positioning.
             </p>
-          </div>
+          </Reveal>
 
           <div className="faq-list">
-            {faq.map((item) => (
-              <article key={item.question} className="faq-item">
-                <h3>{item.question}</h3>
-                <p>{item.answer}</p>
-              </article>
+            {faq.map((item, index) => (
+              <Reveal key={item.question} delay={index * 0.08}>
+                <article className="faq-item">
+                  <h3>{item.question}</h3>
+                  <p>{item.answer}</p>
+                </article>
+              </Reveal>
             ))}
           </div>
         </section>
 
         <section id="download" className="section cta-section" aria-labelledby="cta-title">
-          <div className="cta-panel">
+          <Reveal className="cta-panel">
             <div>
               <span className="kicker">Current build</span>
               <h2 id="cta-title">Superpen is a Qt-based alpha early-access overlay for drawing and explaining on screen.</h2>
@@ -274,7 +285,7 @@ export default function Home() {
                 View the preview
               </a>
             </div>
-          </div>
+          </Reveal>
         </section>
       </main>
     </>
