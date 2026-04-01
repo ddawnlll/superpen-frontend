@@ -338,6 +338,12 @@ button {
   text-wrap: pretty;
 }
 
+.hero-release-line {
+  margin: 1rem 0 0;
+  color: var(--foreground);
+  font-weight: 800;
+}
+
 .hero-meta {
   margin: 1rem 0 0;
   color: #c7664d;
@@ -1467,6 +1473,240 @@ html[data-theme="dark"] .winning-glow {
   background: var(--surface-panel);
 }
 
+.cta-column {
+  display: grid;
+  gap: 1rem;
+}
+
+.download-summary-card,
+.release-list-item,
+.admin-card,
+.admin-release-item {
+  border: 1px solid var(--line);
+  background: var(--surface-strong);
+}
+
+.download-summary-card {
+  display: grid;
+  gap: 0.4rem;
+  margin-top: 1rem;
+  padding: 1rem 1.1rem;
+  border-radius: 1.2rem;
+}
+
+.download-summary-card strong,
+.release-list-item strong {
+  font-size: 1rem;
+}
+
+.download-summary-card span,
+.release-list-item span,
+.admin-release-head span,
+.admin-eyebrow,
+.admin-copy,
+.admin-note,
+.admin-empty {
+  color: var(--muted);
+}
+
+.download-summary-card p {
+  margin: 0;
+}
+
+.release-list {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.release-list-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.9rem 1rem;
+  border-radius: 1rem;
+}
+
+.release-list-item > div {
+  display: grid;
+  gap: 0.2rem;
+}
+
+.release-list-item a,
+.admin-release-links a,
+.admin-release-links button {
+  color: var(--foreground);
+  font-weight: 800;
+}
+
+.admin-shell {
+  min-height: 100vh;
+  padding: 2rem 1rem 3rem;
+}
+
+.admin-panel {
+  width: min(1080px, 100%);
+  margin: 0 auto;
+}
+
+.admin-header,
+.admin-status-row,
+.admin-form-actions,
+.admin-release-head,
+.admin-release-links,
+.admin-top-actions {
+  display: flex;
+  gap: 1rem;
+}
+
+.admin-header,
+.admin-status-row,
+.admin-release-head,
+.admin-release-links {
+  align-items: center;
+  justify-content: space-between;
+}
+
+.admin-top-actions {
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.admin-eyebrow {
+  margin: 0 0 0.35rem;
+  text-transform: uppercase;
+  font-size: 0.82rem;
+  font-weight: 900;
+}
+
+.admin-header h1,
+.admin-card h2 {
+  margin: 0;
+}
+
+.admin-copy {
+  margin: 0.65rem 0 0;
+  max-width: 42rem;
+}
+
+.admin-status-row {
+  margin-top: 1.5rem;
+}
+
+.admin-note {
+  margin-top: 1rem;
+  padding: 0.85rem 1rem;
+  border-radius: 0.95rem;
+  border: 1px solid var(--line);
+  background: var(--surface-soft);
+}
+
+.admin-grid {
+  display: grid;
+  grid-template-columns: 1.05fr 0.95fr;
+  gap: 1.25rem;
+  margin-top: 1.25rem;
+}
+
+.admin-card {
+  padding: 1.2rem;
+  border-radius: 1.2rem;
+}
+
+.admin-login-card {
+  max-width: 34rem;
+  margin-top: 1.25rem;
+}
+
+.admin-login-form {
+  grid-template-columns: 1fr;
+}
+
+.admin-form {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.9rem;
+  margin-top: 1rem;
+}
+
+.admin-field {
+  display: grid;
+  gap: 0.45rem;
+}
+
+.admin-field-wide {
+  grid-column: 1 / -1;
+}
+
+.admin-field span,
+.admin-checkbox span {
+  font-size: 0.92rem;
+  font-weight: 800;
+}
+
+.admin-field input,
+.admin-field textarea {
+  width: 100%;
+  padding: 0.8rem 0.9rem;
+  border: 1px solid var(--line);
+  border-radius: 0.9rem;
+  background: var(--surface-panel);
+  color: var(--foreground);
+  font: inherit;
+}
+
+.admin-checkbox {
+  grid-column: 1 / -1;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.65rem;
+}
+
+.admin-form-actions {
+  grid-column: 1 / -1;
+  justify-content: flex-start;
+  margin-top: 0.25rem;
+}
+
+.admin-release-list {
+  display: grid;
+  gap: 0.8rem;
+  margin-top: 1rem;
+}
+
+.admin-release-item {
+  display: grid;
+  gap: 0.7rem;
+  padding: 1rem;
+  border-radius: 1rem;
+}
+
+.admin-release-item p {
+  margin: 0;
+  color: var(--muted);
+}
+
+.admin-current-pill {
+  padding: 0.35rem 0.65rem;
+  border-radius: 999px;
+  background: rgba(114, 213, 183, 0.2);
+  color: #1d7f62;
+  font-size: 0.8rem;
+  font-weight: 900;
+}
+
+.admin-release-links {
+  flex-wrap: wrap;
+  justify-content: flex-start;
+}
+
+.admin-release-links button {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+}
+
 html[data-theme="dark"] .blob-one {
   background: rgba(255, 127, 102, 0.16);
 }
@@ -1521,6 +1761,11 @@ html[data-theme="dark"] .audience-card li {
   background: rgba(255, 255, 255, 0.06);
 }
 
+html[data-theme="dark"] .admin-current-pill {
+  background: rgba(114, 213, 183, 0.16);
+  color: #aee9d8;
+}
+
 @keyframes floatBlob {
   0%,
   100% {
@@ -1540,6 +1785,7 @@ html[data-theme="dark"] .audience-card li {
   .two-column,
   .comparison-spotlight,
   .cta-panel,
+  .admin-grid,
   .site-footer-panel {
     grid-template-columns: 1fr;
   }
@@ -1585,6 +1831,12 @@ html[data-theme="dark"] .audience-card li {
 
   .comparison-note {
     text-align: left;
+  }
+
+  .admin-status-row,
+  .admin-header {
+    align-items: stretch;
+    flex-direction: column;
   }
 
   .footer-links,
@@ -1661,6 +1913,10 @@ html[data-theme="dark"] .audience-card li {
   }
 
   .mode-switcher {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-form {
     grid-template-columns: 1fr;
   }
 

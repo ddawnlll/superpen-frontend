@@ -1,6 +1,24 @@
+import type { Release } from "@/lib/superpen-api";
 import Reveal from "./Reveal";
 
-export default function CtaSection() {
+type CtaSectionProps = {
+  currentRelease: Release | null;
+  releases: Release[];
+};
+
+function formatReleaseDate(value: string) {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) {
+    return value;
+  }
+  return date.toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+  });
+}
+
+export default function CtaSection({ currentRelease, releases }: CtaSectionProps) {
   return (
     <section id="download" className="section cta-section" aria-labelledby="cta-title">
       <Reveal className="cta-panel">
@@ -11,14 +29,34 @@ export default function CtaSection() {
             The page now reflects the current Windows build while leaving room
             for the broader cross-platform direction of the product.
           </p>
+          {currentRelease && (
+            <div className="download-summary-card">
+              <strong>{currentRelease.version}</strong>
+              <span>{currentRelease.channel} channel - {currentRelease.platform}</span>
+              <p>{currentRelease.summary}</p>
+            </div>
+          )}
         </div>
-        <div className="cta-actions">
-          <a className="primary-button" href="#">
-            Download for Windows
-          </a>
-          <a className="secondary-button" href="#demo">
-            View the preview
-          </a>
+        <div className="cta-column">
+          <div className="cta-actions">
+            <a className="primary-button" href={currentRelease?.downloadUrl || "#"}>
+              Download for Windows
+            </a>
+            <a className="secondary-button" href="#demo">
+              View the preview
+            </a>
+          </div>
+          <div className="release-list">
+            {releases.slice(0, 4).map((release) => (
+              <article key={release.version} className="release-list-item">
+                <div>
+                  <strong>{release.version}</strong>
+                  <span>{formatReleaseDate(release.publishedAt)}</span>
+                </div>
+                <a href={release.downloadUrl}>Download</a>
+              </article>
+            ))}
+          </div>
         </div>
       </Reveal>
     </section>

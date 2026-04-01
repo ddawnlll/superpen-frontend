@@ -2,6 +2,7 @@
 
 import { motion } from "framer-motion";
 import { useState } from "react";
+import type { Release } from "@/lib/superpen-api";
 
 const demoModes = [
   {
@@ -42,7 +43,11 @@ const fadeUp = {
   transition: { duration: 0.7, ease: [0.22, 1, 0.36, 1] as const },
 };
 
-export default function Hero() {
+type HeroProps = {
+  currentRelease: Release | null;
+};
+
+export default function Hero({ currentRelease }: HeroProps) {
   const [activeMode, setActiveMode] = useState(demoModes[0]);
 
   return (
@@ -66,9 +71,14 @@ export default function Hero() {
             screenshots, and fast live explanation, with the product heading
             toward a broader cross-platform release.
           </p>
+          {currentRelease && (
+            <p className="hero-release-line">
+              Current release: <strong>{currentRelease.version}</strong> for {currentRelease.platform}
+            </p>
+          )}
 
           <div className="hero-actions">
-            <a className="primary-button" href="#download">
+            <a className="primary-button" href={currentRelease?.downloadUrl || "#download"}>
               Try Superpen free
             </a>
             <a className="secondary-button" href="#demo">
