@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Script from "next/script";
+import AnalyticsTracker from "./AnalyticsTracker";
 import AudienceSection from "./AudienceSection";
 import CapabilitiesSection from "./CapabilitiesSection";
 import ComparisonSection from "./ComparisonSection";
@@ -9,7 +10,7 @@ import FeaturesSection from "./FeaturesSection";
 import Hero from "./Hero";
 import Navbar from "./Navbar";
 import WorkflowSection from "./WorkflowSection";
-import { getSiteData } from "@/lib/superpen-api";
+import { getSiteData } from "@/lib/superpen-api-server";
 import {
   audiences,
   capabilities,
@@ -56,6 +57,7 @@ export default async function Home() {
       />
 
       <main id="top" className="superpen-shell">
+        <AnalyticsTracker />
         <Navbar />
         <Hero currentRelease={siteData.currentRelease} />
         <FeaturesSection features={features} />

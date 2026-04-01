@@ -39,10 +39,23 @@ export default function CtaSection({ currentRelease, releases }: CtaSectionProps
         </div>
         <div className="cta-column">
           <div className="cta-actions">
-            <a className="primary-button" href={currentRelease?.downloadUrl || "#"}>
+            <a
+              className="primary-button"
+              href={currentRelease?.downloadUrl || "#"}
+              data-analytics-event="download_started"
+              data-analytics-label="CTA download"
+              data-analytics-target="cta-download"
+              data-analytics-release={currentRelease?.version || ""}
+            >
               Download for Windows
             </a>
-            <a className="secondary-button" href="#demo">
+            <a
+              className="secondary-button"
+              href="#demo"
+              data-analytics-event="click"
+              data-analytics-label="CTA preview"
+              data-analytics-target="cta-preview"
+            >
               View the preview
             </a>
           </div>
@@ -53,7 +66,15 @@ export default function CtaSection({ currentRelease, releases }: CtaSectionProps
                   <strong>{release.version}</strong>
                   <span>{formatReleaseDate(release.publishedAt)}</span>
                 </div>
-                <a href={release.downloadUrl}>Download</a>
+                <a
+                  href={release.downloadUrl}
+                  data-analytics-event="download_started"
+                  data-analytics-label={`Release download ${release.version}`}
+                  data-analytics-target={`release-download-${release.version}`}
+                  data-analytics-release={release.version}
+                >
+                  Download
+                </a>
               </article>
             ))}
           </div>

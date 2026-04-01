@@ -4,6 +4,8 @@ import { FormEvent, useEffect, useMemo, useState } from "react";
 import {
   getApiBaseUrl,
   loginWithCredentials,
+  type AnalyticsOverview,
+  type AnalyticsTimelineEvent,
   type LoginResponse,
   type Release,
   type SiteData,
@@ -27,6 +29,11 @@ type LoginFormState = {
   password: string;
 };
 
+type TimelineFormState = {
+  visitorId: string;
+  sessionId: string;
+};
+
 const EMPTY_FORM: ReleaseFormState = {
   version: "",
   channel: "stable",
@@ -43,6 +50,11 @@ const EMPTY_FORM: ReleaseFormState = {
 const EMPTY_LOGIN: LoginFormState = {
   username: "",
   password: "",
+};
+
+const EMPTY_TIMELINE: TimelineFormState = {
+  visitorId: "",
+  sessionId: "",
 };
 
 function toFormState(release?: Release | null): ReleaseFormState {
@@ -67,13 +79,81 @@ function getStoredToken(): string {
   return window.localStorage.getItem("superpen-admin-jwt") || "";
 }
 
+function formatNumber(value: number) {
+  return new Intl.NumberFormat("en-US").format(value);
+}
+
+function formatPercent(value: number) {
+  return `${value}%`;
+}
+
+function formatDuration(seconds: number) {
+  if (seconds < 60) {
+    return `${seconds}s`;
+  }
+
+  const minutes = Math.floor(seconds / 60);
+  const remaining = seconds % 60;
+  return remaining > 0 ? `${minutes}m ${remaining}s` : `${minutes}m`;
+}
+
+function formatDateTime(value: string) {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) {
+    return value;
+  }
+
+  return date.toLocaleString("en-US", {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
+function BarList({
+  items,
+  getLabel,
+  getValue,
+}: {
+  items: unknown[];
+  getLabel: (item: unknown) => string;
+  getValue: (item: unknown) => number;
+}) {
+  const maxValue = items.reduce((max, item) => Math.max(max, getValue(item)), 0) || 1;
+
+  return (
+    <div className="analytics-bar-list">
+      {items.map((item, index) => {
+        const label = getLabel(item);
+        const value = getValue(item);
+        return (
+          <div className="analytics-bar-row" key={`${label}-${index}`}>
+            <div className="analytics-bar-copy">
+              <strong>{label}</strong>
+              <span>{formatNumber(value)}</span>
+            </div>
+            <div className="analytics-bar-track" aria-hidden="true">
+              <div className="analytics-bar-fill" style={{ width: `${Math.max(8, (value / maxValue) * 100)}%` }} />
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
 export default function AdminPanel() {
   const apiBaseUrl = useMemo(() => getApiBaseUrl(), []);
   const [authToken, setAuthToken] = useState("");
   const [loginForm, setLoginForm] = useState<LoginFormState>(EMPTY_LOGIN);
+  const [timelineForm, setTimelineForm] = useState<TimelineFormState>(EMPTY_TIMELINE);
   const [siteData, setSiteData] = useState<SiteData | null>(null);
+  const [analyticsOverview, setAnalyticsOverview] = useState<AnalyticsOverview | null>(null);
+  const [timelineEvents, setTimelineEvents] = useState<AnalyticsTimelineEvent[]>([]);
   const [form, setForm] = useState<ReleaseFormState>(EMPTY_FORM);
-  const [message, setMessage] = useState("Log in to manage releases.");
+  const [message, setMessage] = useState("Log in to manage releases and analytics.");
   const [isBusy, setIsBusy] = useState(false);
 
   useEffect(() => {
@@ -85,7 +165,7 @@ export default function AdminPanel() {
 
   useEffect(() => {
     if (authToken) {
-      void loadReleases();
+      void loadDashboard();
     }
   }, [authToken]);
 
@@ -101,6 +181,7 @@ export default function AdminPanel() {
         ...(init?.headers || {}),
         Authorization: `Bearer ${token}`,
       },
+      cache: "no-store",
     });
 
     if (response.status === 401) {
@@ -112,20 +193,30 @@ export default function AdminPanel() {
     return response;
   }
 
-  async function loadReleases() {
+  async function loadDashboard() {
     setIsBusy(true);
-    setMessage("Loading release data...");
+    setMessage("Loading releases and analytics...");
     try {
-      const response = await authenticatedFetch("/api/admin/releases");
-      if (!response.ok) {
-        throw new Error(`Request failed: ${response.status}`);
+      const [releasesResponse, analyticsResponse] = await Promise.all([
+        authenticatedFetch("/api/admin/releases"),
+        authenticatedFetch("/api/admin/analytics/overview"),
+      ]);
+
+      if (!releasesResponse.ok) {
+        throw new Error(`Release request failed: ${releasesResponse.status}`);
       }
 
-      const data = (await response.json()) as SiteData;
-      setSiteData(data);
-      setMessage("Release data loaded.");
+      if (!analyticsResponse.ok) {
+        throw new Error(`Analytics request failed: ${analyticsResponse.status}`);
+      }
+
+      const releasesData = (await releasesResponse.json()) as SiteData;
+      const analyticsData = (await analyticsResponse.json()) as AnalyticsOverview;
+      setSiteData(releasesData);
+      setAnalyticsOverview(analyticsData);
+      setMessage("Dashboard updated.");
     } catch (error) {
-      setMessage(error instanceof Error ? error.message : "Could not load release data.");
+      setMessage(error instanceof Error ? error.message : "Could not load dashboard.");
     } finally {
       setIsBusy(false);
     }
@@ -170,14 +261,15 @@ export default function AdminPanel() {
       });
 
       if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(errorText || `Request failed: ${response.status}`);
+        const payload = (await response.json().catch(() => null)) as { error?: string } | null;
+        throw new Error(payload?.error || `Request failed: ${response.status}`);
       }
 
       const data = (await response.json()) as SiteData;
       setSiteData(data);
       setMessage(`Saved release ${form.version}.`);
       setForm(EMPTY_FORM);
+      await loadDashboard();
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "Could not save release.");
     } finally {
@@ -204,6 +296,7 @@ export default function AdminPanel() {
       const data = (await response.json()) as SiteData;
       setSiteData(data);
       setMessage(`Current version set to ${version}.`);
+      await loadDashboard();
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "Could not set current version.");
     } finally {
@@ -226,8 +319,39 @@ export default function AdminPanel() {
       const data = (await response.json()) as SiteData;
       setSiteData(data);
       setMessage(`Deleted ${version}.`);
+      await loadDashboard();
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "Could not delete release.");
+    } finally {
+      setIsBusy(false);
+    }
+  }
+
+  async function loadTimeline(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setIsBusy(true);
+    setMessage("Loading user timeline...");
+
+    try {
+      const params = new URLSearchParams();
+      if (timelineForm.visitorId.trim()) {
+        params.set("visitorId", timelineForm.visitorId.trim());
+      }
+      if (timelineForm.sessionId.trim()) {
+        params.set("sessionId", timelineForm.sessionId.trim());
+      }
+
+      const response = await authenticatedFetch(`/api/admin/analytics/timeline?${params.toString()}`);
+      if (!response.ok) {
+        throw new Error(`Timeline request failed: ${response.status}`);
+      }
+
+      const payload = (await response.json()) as { timeline?: AnalyticsTimelineEvent[] };
+      setTimelineEvents(payload.timeline || []);
+      setMessage(`Loaded ${payload.timeline?.length || 0} timeline events.`);
+    } catch (error) {
+      setTimelineEvents([]);
+      setMessage(error instanceof Error ? error.message : "Could not load timeline.");
     } finally {
       setIsBusy(false);
     }
@@ -237,6 +361,8 @@ export default function AdminPanel() {
     window.localStorage.removeItem("superpen-admin-jwt");
     setAuthToken("");
     setSiteData(null);
+    setAnalyticsOverview(null);
+    setTimelineEvents([]);
     setMessage("Logged out.");
   }
 
@@ -248,7 +374,7 @@ export default function AdminPanel() {
             <div>
               <p className="admin-eyebrow">Release management</p>
               <h1>SuperPen admin</h1>
-              <p className="admin-copy">Log in with your admin account to manage versions and downloads.</p>
+              <p className="admin-copy">Log in with your admin account to manage versions, downloads, and analytics.</p>
             </div>
             <a className="secondary-button" href="/">
               Back to site
@@ -294,14 +420,14 @@ export default function AdminPanel() {
       <section className="admin-panel">
         <div className="admin-header">
           <div>
-            <p className="admin-eyebrow">Release management</p>
+            <p className="admin-eyebrow">Release management and analytics</p>
             <h1>SuperPen admin</h1>
             <p className="admin-copy">
-              Manage current versions, download links, and release notes from one place.
+              Manage releases, monitor adoption, inspect user flows, and watch API health from one place.
             </p>
           </div>
           <div className="admin-top-actions">
-            <button type="button" className="secondary-button" onClick={loadReleases} disabled={isBusy}>
+            <button type="button" className="secondary-button" onClick={loadDashboard} disabled={isBusy}>
               Refresh
             </button>
             <button type="button" className="secondary-button" onClick={logout}>
@@ -315,8 +441,211 @@ export default function AdminPanel() {
 
         <div className="admin-note">{message}</div>
 
-        <div className="admin-grid">
-          <section className="admin-card">
+        {analyticsOverview && (
+          <>
+            <section className="analytics-section">
+              <div className="analytics-summary-grid">
+                <article className="analytics-metric-card">
+                  <span>Page views (30d)</span>
+                  <strong>{formatNumber(analyticsOverview.summary.pageViews30d)}</strong>
+                </article>
+                <article className="analytics-metric-card">
+                  <span>Unique visitors (30d)</span>
+                  <strong>{formatNumber(analyticsOverview.summary.uniqueVisitors30d)}</strong>
+                </article>
+                <article className="analytics-metric-card">
+                  <span>Downloads (30d)</span>
+                  <strong>{formatNumber(analyticsOverview.summary.totalDownloads30d)}</strong>
+                </article>
+                <article className="analytics-metric-card">
+                  <span>Avg session</span>
+                  <strong>{formatDuration(analyticsOverview.summary.averageSessionSeconds30d)}</strong>
+                </article>
+                <article className="analytics-metric-card">
+                  <span>Engaged sessions</span>
+                  <strong>{formatNumber(analyticsOverview.summary.engagedSessions30d)}</strong>
+                </article>
+                <article className="analytics-metric-card">
+                  <span>Retention D1 / D7 / D30</span>
+                  <strong>
+                    {formatPercent(analyticsOverview.retention.day1)} / {formatPercent(analyticsOverview.retention.day7)} / {formatPercent(analyticsOverview.retention.day30)}
+                  </strong>
+                </article>
+              </div>
+            </section>
+
+            <section className="analytics-grid">
+              <article className="admin-card analytics-card">
+                <h2>Conversion funnel</h2>
+                <BarList
+                  items={analyticsOverview.funnel}
+                  getLabel={(item) => (item as { step: string }).step}
+                  getValue={(item) => (item as { count: number }).count}
+                />
+              </article>
+
+              <article className="admin-card analytics-card">
+                <h2>Downloads by release</h2>
+                <BarList
+                  items={analyticsOverview.downloadsByRelease}
+                  getLabel={(item) => (item as { version: string }).version}
+                  getValue={(item) => (item as { downloads: number }).downloads}
+                />
+              </article>
+
+              <article className="admin-card analytics-card">
+                <h2>Clicks by target</h2>
+                <BarList
+                  items={analyticsOverview.clicksByTarget}
+                  getLabel={(item) => (item as { target: string }).target}
+                  getValue={(item) => (item as { count: number }).count}
+                />
+              </article>
+
+              <article className="admin-card analytics-card">
+                <h2>Geographic results</h2>
+                <div className="analytics-table-wrap">
+                  <table className="analytics-table">
+                    <thead>
+                      <tr>
+                        <th>Country</th>
+                        <th>Visitors</th>
+                        <th>Views</th>
+                        <th>Downloads</th>
+                        <th>Avg session</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {analyticsOverview.geoByCountry.map((row) => (
+                        <tr key={row.country}>
+                          <td>{row.country}</td>
+                          <td>{formatNumber(row.visitors)}</td>
+                          <td>{formatNumber(row.pageViews)}</td>
+                          <td>{formatNumber(row.downloads)}</td>
+                          <td>{formatDuration(row.averageSessionSeconds)}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </article>
+
+              <article className="admin-card analytics-card">
+                <h2>Device mix</h2>
+                <div className="analytics-split-list">
+                  <div>
+                    <h3>Browsers</h3>
+                    <BarList
+                      items={analyticsOverview.devices.browsers}
+                      getLabel={(item) => (item as { name: string }).name}
+                      getValue={(item) => (item as { count: number }).count}
+                    />
+                  </div>
+                  <div>
+                    <h3>Operating systems</h3>
+                    <BarList
+                      items={analyticsOverview.devices.operatingSystems}
+                      getLabel={(item) => (item as { name: string }).name}
+                      getValue={(item) => (item as { count: number }).count}
+                    />
+                  </div>
+                  <div>
+                    <h3>Device types</h3>
+                    <BarList
+                      items={analyticsOverview.devices.deviceTypes}
+                      getLabel={(item) => (item as { name: string }).name}
+                      getValue={(item) => (item as { count: number }).count}
+                    />
+                  </div>
+                </div>
+              </article>
+
+              <article className="admin-card analytics-card analytics-card-wide">
+                <h2>Traffic by day</h2>
+                <div className="analytics-table-wrap">
+                  <table className="analytics-table">
+                    <thead>
+                      <tr>
+                        <th>Date</th>
+                        <th>Page views</th>
+                        <th>Unique visitors</th>
+                        <th>Downloads</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {analyticsOverview.trafficByDay.slice(-14).map((row) => (
+                        <tr key={row.date}>
+                          <td>{row.date}</td>
+                          <td>{formatNumber(row.pageViews)}</td>
+                          <td>{formatNumber(row.uniqueVisitors)}</td>
+                          <td>{formatNumber(row.downloads)}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </article>
+
+              <article className="admin-card analytics-card analytics-card-wide">
+                <h2>API performance</h2>
+                <div className="analytics-table-wrap">
+                  <table className="analytics-table">
+                    <thead>
+                      <tr>
+                        <th>Endpoint</th>
+                        <th>Requests</th>
+                        <th>Avg</th>
+                        <th>P95</th>
+                        <th>P99</th>
+                        <th>Error rate</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {analyticsOverview.apiPerformance.map((row) => (
+                        <tr key={`${row.method}-${row.path}`}>
+                          <td>{row.method} {row.path}</td>
+                          <td>{formatNumber(row.requests)}</td>
+                          <td>{row.averageMs}ms</td>
+                          <td>{row.p95Ms}ms</td>
+                          <td>{row.p99Ms}ms</td>
+                          <td>{formatPercent(row.errorRate)}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </article>
+
+              <article className="admin-card analytics-card">
+                <h2>Referrers</h2>
+                <BarList
+                  items={analyticsOverview.referrers}
+                  getLabel={(item) => (item as { source: string }).source}
+                  getValue={(item) => (item as { count: number }).count}
+                />
+              </article>
+
+              <article className="admin-card analytics-card">
+                <h2>Recent events</h2>
+                <div className="analytics-event-list">
+                  {analyticsOverview.recentEvents.map((event) => (
+                    <div className="analytics-event-item" key={`${event.occurredAt}-${event.eventType}-${event.sessionId || ""}`}>
+                      <strong>{event.eventType}</strong>
+                      <span>{formatDateTime(event.occurredAt)}</span>
+                      <p>
+                        {event.path || event.label || "No label"}
+                        {event.releaseVersion ? ` - ${event.releaseVersion}` : ""}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </article>
+            </section>
+          </>
+        )}
+
+        <section className="analytics-grid">
+          <section className="admin-card analytics-card">
             <h2>Create or update release</h2>
             <form className="admin-form" onSubmit={submitRelease}>
               <label className="admin-field">
@@ -411,7 +740,7 @@ export default function AdminPanel() {
             </form>
           </section>
 
-          <section className="admin-card">
+          <section className="admin-card analytics-card">
             <h2>Published releases</h2>
             <div className="admin-release-list">
               {siteData?.releases?.length ? (
@@ -449,7 +778,55 @@ export default function AdminPanel() {
               )}
             </div>
           </section>
-        </div>
+
+          <section className="admin-card analytics-card analytics-card-wide">
+            <h2>User timeline lookup</h2>
+            <form className="admin-form" onSubmit={loadTimeline}>
+              <label className="admin-field">
+                <span>Visitor ID</span>
+                <input
+                  value={timelineForm.visitorId}
+                  onChange={(event) => setTimelineForm((current) => ({ ...current, visitorId: event.target.value }))}
+                  placeholder="visitor-..."
+                />
+              </label>
+              <label className="admin-field">
+                <span>Session ID</span>
+                <input
+                  value={timelineForm.sessionId}
+                  onChange={(event) => setTimelineForm((current) => ({ ...current, sessionId: event.target.value }))}
+                  placeholder="session-..."
+                />
+              </label>
+              <div className="admin-form-actions">
+                <button type="submit" className="primary-button" disabled={isBusy}>
+                  Load timeline
+                </button>
+              </div>
+            </form>
+
+            <div className="analytics-event-list timeline-list">
+              {timelineEvents.length > 0 ? (
+                timelineEvents.map((event) => (
+                  <div className="analytics-event-item" key={`${event.occurredAt}-${event.eventType}-${event.sessionId || ""}`}>
+                    <strong>{event.eventType}</strong>
+                    <span>{formatDateTime(event.occurredAt)}</span>
+                    <p>
+                      {event.path || event.targetId || event.label || "No label"}
+                      {event.releaseVersion ? ` - ${event.releaseVersion}` : ""}
+                    </p>
+                    <small>
+                      {event.country || "Unknown"} - {event.browser || "Unknown"} - {event.os || "Unknown"}
+                      {typeof event.elapsedSeconds === "number" ? ` - ${formatDuration(event.elapsedSeconds)}` : ""}
+                    </small>
+                  </div>
+                ))
+              ) : (
+                <p className="admin-empty">Enter a visitor ID or session ID to inspect a single user timeline.</p>
+              )}
+            </div>
+          </section>
+        </section>
       </section>
     </main>
   );

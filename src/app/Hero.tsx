@@ -78,10 +78,23 @@ export default function Hero({ currentRelease }: HeroProps) {
           )}
 
           <div className="hero-actions">
-            <a className="primary-button" href={currentRelease?.downloadUrl || "#download"}>
+            <a
+              className="primary-button"
+              href={currentRelease?.downloadUrl || "#download"}
+              data-analytics-event="download_started"
+              data-analytics-label="Hero download"
+              data-analytics-target="hero-download"
+              data-analytics-release={currentRelease?.version || ""}
+            >
               Try Superpen free
             </a>
-            <a className="secondary-button" href="#demo">
+            <a
+              className="secondary-button"
+              href="#demo"
+              data-analytics-event="click"
+              data-analytics-label="Hero demo"
+              data-analytics-target="hero-demo"
+            >
               See the demo
             </a>
           </div>

@@ -26,28 +26,89 @@ export type LoginResponse = {
   expiresInMinutes: number;
 };
 
-const DEFAULT_RELEASE: Release = {
-  version: "0.1.0-alpha",
-  channel: "alpha",
-  platform: "Windows",
-  downloadUrl: "#",
-  publishedAt: "2026-04-01T00:00:00Z",
-  summary: "Alpha early-access Windows build.",
-  notes: [
-    "Live screen annotation overlay",
-    "Tablet and pressure input support",
-    "Alpha release with active development",
-  ],
-  fileSize: "TBD",
-  checksum: "",
+export type AnalyticsFunnelStep = {
+  step: string;
+  count: number;
 };
 
-const DEFAULT_SITE_DATA: SiteData = {
-  productName: "SuperPen",
-  currentVersion: DEFAULT_RELEASE.version,
-  currentRelease: DEFAULT_RELEASE,
-  releases: [DEFAULT_RELEASE],
-  generatedAt: DEFAULT_RELEASE.publishedAt,
+export type AnalyticsTimelineEvent = {
+  eventType: string;
+  occurredAt: string;
+  visitorId?: string;
+  sessionId?: string;
+  path?: string;
+  label?: string;
+  targetId?: string;
+  releaseVersion?: string;
+  elapsedSeconds?: number;
+  country?: string;
+  browser?: string;
+  os?: string;
+};
+
+export type AnalyticsOverview = {
+  generatedAt: string;
+  summary: {
+    pageViews30d: number;
+    uniqueVisitors7d: number;
+    uniqueVisitors30d: number;
+    sessions30d: number;
+    averageSessionSeconds30d: number;
+    totalDownloads30d: number;
+    engagedSessions30d: number;
+  };
+  funnel: AnalyticsFunnelStep[];
+  trafficByDay: Array<{
+    date: string;
+    pageViews: number;
+    uniqueVisitors: number;
+    downloads: number;
+  }>;
+  geoByCountry: Array<{
+    country: string;
+    visitors: number;
+    pageViews: number;
+    downloads: number;
+    averageSessionSeconds: number;
+  }>;
+  clicksByTarget: Array<{
+    target: string;
+    count: number;
+  }>;
+  downloadsByRelease: Array<{
+    version: string;
+    downloads: number;
+    uniqueVisitors: number;
+  }>;
+  devices: {
+    browsers: Array<{ name: string; count: number }>;
+    operatingSystems: Array<{ name: string; count: number }>;
+    deviceTypes: Array<{ name: string; count: number }>;
+  };
+  referrers: Array<{ source: string; count: number }>;
+  retention: {
+    day1: number;
+    day7: number;
+    day30: number;
+  };
+  apiPerformance: Array<{
+    path: string;
+    method: string;
+    requests: number;
+    averageMs: number;
+    p95Ms: number;
+    p99Ms: number;
+    errorRate: number;
+  }>;
+  recentEvents: Array<{
+    eventType: string;
+    occurredAt: string;
+    visitorId?: string;
+    sessionId?: string;
+    path?: string;
+    label?: string;
+    releaseVersion?: string;
+  }>;
 };
 
 export function getApiBaseUrl(): string {
@@ -78,53 +139,4 @@ export async function loginWithCredentials(
   }
 
   return response.json() as Promise<LoginResponse>;
-}
-
-async function getServerSideToken(): Promise<string | null> {
-  const username = process.env.SUPERPEN_API_USERNAME;
-  const password = process.env.SUPERPEN_API_PASSWORD;
-  if (!username || !password) {
-    return null;
-  }
-
-  try {
-    const login = await loginWithCredentials(username, password);
-    return login.token;
-  } catch {
-    return null;
-  }
-}
-
-export async function getSiteData(): Promise<SiteData> {
-  try {
-    const token = await getServerSideToken();
-    if (!token) {
-      return DEFAULT_SITE_DATA;
-    }
-
-    const response = await fetch(`${getApiBaseUrl()}/api/public/site-data`, {
-      cache: "no-store",
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
-
-    if (!response.ok) {
-      return DEFAULT_SITE_DATA;
-    }
-
-    const data = (await response.json()) as Partial<SiteData>;
-    return {
-      productName: data.productName || DEFAULT_SITE_DATA.productName,
-      currentVersion: data.currentVersion || DEFAULT_SITE_DATA.currentVersion,
-      currentRelease: data.currentRelease || DEFAULT_SITE_DATA.currentRelease,
-      releases:
-        data.releases && data.releases.length > 0
-          ? data.releases
-          : DEFAULT_SITE_DATA.releases,
-      generatedAt: data.generatedAt || new Date().toISOString(),
-    };
-  } catch {
-    return DEFAULT_SITE_DATA;
-  }
 }
