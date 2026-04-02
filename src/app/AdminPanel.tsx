@@ -3,6 +3,7 @@
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import {
   getApiBaseUrl,
+  type AnalyticsExport,
   loginWithCredentials,
   type AnalyticsOverview,
   type AnalyticsTimelineEvent,
@@ -151,6 +152,7 @@ export default function AdminPanel() {
   const [timelineForm, setTimelineForm] = useState<TimelineFormState>(EMPTY_TIMELINE);
   const [siteData, setSiteData] = useState<SiteData | null>(null);
   const [analyticsOverview, setAnalyticsOverview] = useState<AnalyticsOverview | null>(null);
+  const [analyticsExport, setAnalyticsExport] = useState<AnalyticsExport | null>(null);
   const [timelineEvents, setTimelineEvents] = useState<AnalyticsTimelineEvent[]>([]);
   const [form, setForm] = useState<ReleaseFormState>(EMPTY_FORM);
   const [message, setMessage] = useState("Log in to manage releases and analytics.");
@@ -214,6 +216,7 @@ export default function AdminPanel() {
       const analyticsData = (await analyticsResponse.json()) as AnalyticsOverview;
       setSiteData(releasesData);
       setAnalyticsOverview(analyticsData);
+      setAnalyticsExport(null);
       setMessage("Dashboard updated.");
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "Could not load dashboard.");
@@ -357,11 +360,42 @@ export default function AdminPanel() {
     }
   }
 
+  async function exportTopReport() {
+    setIsBusy(true);
+    setMessage("Preparing analytics export...");
+
+    try {
+      const response = await authenticatedFetch("/api/admin/analytics/export/top");
+      if (!response.ok) {
+        throw new Error(`Export request failed: ${response.status}`);
+      }
+
+      const payload = (await response.json()) as AnalyticsExport;
+      setAnalyticsExport(payload);
+
+      const blob = new Blob([JSON.stringify(payload, null, 2)], {
+        type: "application/json",
+      });
+      const downloadUrl = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = downloadUrl;
+      link.download = `superpen-top-report-${payload.generatedAt.slice(0, 10)}.json`;
+      link.click();
+      URL.revokeObjectURL(downloadUrl);
+      setMessage("Analytics export downloaded.");
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : "Could not export analytics.");
+    } finally {
+      setIsBusy(false);
+    }
+  }
+
   function logout() {
     window.localStorage.removeItem("superpen-admin-jwt");
     setAuthToken("");
     setSiteData(null);
     setAnalyticsOverview(null);
+    setAnalyticsExport(null);
     setTimelineEvents([]);
     setMessage("Logged out.");
   }
@@ -430,6 +464,9 @@ export default function AdminPanel() {
             <button type="button" className="secondary-button" onClick={loadDashboard} disabled={isBusy}>
               Refresh
             </button>
+            <button type="button" className="secondary-button" onClick={exportTopReport} disabled={isBusy}>
+              Export report
+            </button>
             <button type="button" className="secondary-button" onClick={logout}>
               Log out
             </button>
@@ -458,12 +495,12 @@ export default function AdminPanel() {
                   <strong>{formatNumber(analyticsOverview.summary.totalDownloads30d)}</strong>
                 </article>
                 <article className="analytics-metric-card">
-                  <span>Avg session</span>
-                  <strong>{formatDuration(analyticsOverview.summary.averageSessionSeconds30d)}</strong>
+                  <span>Completed downloads (30d)</span>
+                  <strong>{formatNumber(analyticsOverview.summary.completedDownloads30d)}</strong>
                 </article>
                 <article className="analytics-metric-card">
-                  <span>Engaged sessions</span>
-                  <strong>{formatNumber(analyticsOverview.summary.engagedSessions30d)}</strong>
+                  <span>Avg session</span>
+                  <strong>{formatDuration(analyticsOverview.summary.averageSessionSeconds30d)}</strong>
                 </article>
                 <article className="analytics-metric-card">
                   <span>Retention D1 / D7 / D30</span>
@@ -471,10 +508,33 @@ export default function AdminPanel() {
                     {formatPercent(analyticsOverview.retention.day1)} / {formatPercent(analyticsOverview.retention.day7)} / {formatPercent(analyticsOverview.retention.day30)}
                   </strong>
                 </article>
+                <article className="analytics-metric-card">
+                  <span>Engaged sessions</span>
+                  <strong>{formatNumber(analyticsOverview.summary.engagedSessions30d)}</strong>
+                </article>
               </div>
             </section>
 
             <section className="analytics-grid">
+              <article className="admin-card analytics-card">
+                <h2>Alerts</h2>
+                <div className="analytics-alert-list">
+                  {analyticsOverview.alerts.length > 0 ? (
+                    analyticsOverview.alerts.map((alert, index) => (
+                      <div
+                        key={`${alert.method}-${alert.path}-${alert.type}-${index}`}
+                        className={`analytics-alert-item ${alert.level === "critical" ? "is-critical" : "is-warning"}`}
+                      >
+                        <strong>{alert.level.toUpperCase()}</strong>
+                        <p>{alert.message}</p>
+                      </div>
+                    ))
+                  ) : (
+                    <p className="admin-empty">No alert thresholds are currently breached.</p>
+                  )}
+                </div>
+              </article>
+
               <article className="admin-card analytics-card">
                 <h2>Conversion funnel</h2>
                 <BarList
@@ -486,11 +546,28 @@ export default function AdminPanel() {
 
               <article className="admin-card analytics-card">
                 <h2>Downloads by release</h2>
-                <BarList
-                  items={analyticsOverview.downloadsByRelease}
-                  getLabel={(item) => (item as { version: string }).version}
-                  getValue={(item) => (item as { downloads: number }).downloads}
-                />
+                <div className="analytics-table-wrap">
+                  <table className="analytics-table">
+                    <thead>
+                      <tr>
+                        <th>Release</th>
+                        <th>Started</th>
+                        <th>Completed</th>
+                        <th>Unique visitors</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {analyticsOverview.downloadsByRelease.map((row) => (
+                        <tr key={row.version}>
+                          <td>{row.version}</td>
+                          <td>{formatNumber(row.startedDownloads)}</td>
+                          <td>{formatNumber(row.completedDownloads)}</td>
+                          <td>{formatNumber(row.uniqueVisitors)}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               </article>
 
               <article className="admin-card analytics-card">
@@ -529,6 +606,38 @@ export default function AdminPanel() {
                   </table>
                 </div>
               </article>
+
+              {analyticsExport && (
+                <article className="admin-card analytics-card">
+                  <h2>Latest export snapshot</h2>
+                  <div className="analytics-split-list">
+                    <div>
+                      <h3>Top pages</h3>
+                      <BarList
+                        items={analyticsExport.topPages}
+                        getLabel={(item) => (item as { path: string }).path}
+                        getValue={(item) => (item as { pageViews: number }).pageViews}
+                      />
+                    </div>
+                    <div>
+                      <h3>Top countries</h3>
+                      <BarList
+                        items={analyticsExport.topCountries}
+                        getLabel={(item) => (item as { country: string }).country}
+                        getValue={(item) => (item as { visitors: number }).visitors}
+                      />
+                    </div>
+                    <div>
+                      <h3>Top releases</h3>
+                      <BarList
+                        items={analyticsExport.topReleases}
+                        getLabel={(item) => (item as { version: string }).version}
+                        getValue={(item) => (item as { completedDownloads: number }).completedDownloads}
+                      />
+                    </div>
+                  </div>
+                </article>
+              )}
 
               <article className="admin-card analytics-card">
                 <h2>Device mix</h2>

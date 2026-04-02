@@ -3,6 +3,7 @@
 import { motion } from "framer-motion";
 import { useState } from "react";
 import type { Release } from "@/lib/superpen-api";
+import { buildTrackedDownloadUrl } from "@/lib/download-tracking";
 
 const demoModes = [
   {
@@ -80,8 +81,8 @@ export default function Hero({ currentRelease }: HeroProps) {
           <div className="hero-actions">
             <a
               className="primary-button"
-              href={currentRelease?.downloadUrl || "#download"}
-              data-analytics-event="download_started"
+              href={buildTrackedDownloadUrl(currentRelease, "Hero download", "hero-download", "/")}
+              data-analytics-event="click"
               data-analytics-label="Hero download"
               data-analytics-target="hero-download"
               data-analytics-release={currentRelease?.version || ""}

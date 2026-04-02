@@ -1738,6 +1738,39 @@ html[data-theme="dark"] .winning-glow {
   margin-top: 1rem;
 }
 
+.analytics-alert-list {
+  display: grid;
+  gap: 0.8rem;
+  margin-top: 1rem;
+}
+
+.analytics-alert-item {
+  display: grid;
+  gap: 0.35rem;
+  padding: 0.9rem 1rem;
+  border-radius: 1rem;
+  border: 1px solid var(--line);
+}
+
+.analytics-alert-item strong {
+  font-size: 0.8rem;
+  letter-spacing: 0.04em;
+}
+
+.analytics-alert-item p {
+  margin: 0;
+}
+
+.analytics-alert-item.is-warning {
+  background: rgba(246, 196, 83, 0.14);
+  border-color: rgba(246, 196, 83, 0.35);
+}
+
+.analytics-alert-item.is-critical {
+  background: rgba(255, 127, 102, 0.14);
+  border-color: rgba(255, 127, 102, 0.38);
+}
+
 .analytics-event-item {
   display: grid;
   gap: 0.3rem;

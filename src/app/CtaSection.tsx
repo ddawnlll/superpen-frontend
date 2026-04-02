@@ -1,4 +1,5 @@
 import type { Release } from "@/lib/superpen-api";
+import { buildTrackedDownloadUrl } from "@/lib/download-tracking";
 import Reveal from "./Reveal";
 
 type CtaSectionProps = {
@@ -41,8 +42,8 @@ export default function CtaSection({ currentRelease, releases }: CtaSectionProps
           <div className="cta-actions">
             <a
               className="primary-button"
-              href={currentRelease?.downloadUrl || "#"}
-              data-analytics-event="download_started"
+              href={buildTrackedDownloadUrl(currentRelease, "CTA download", "cta-download", "/#download")}
+              data-analytics-event="click"
               data-analytics-label="CTA download"
               data-analytics-target="cta-download"
               data-analytics-release={currentRelease?.version || ""}
@@ -67,8 +68,13 @@ export default function CtaSection({ currentRelease, releases }: CtaSectionProps
                   <span>{formatReleaseDate(release.publishedAt)}</span>
                 </div>
                 <a
-                  href={release.downloadUrl}
-                  data-analytics-event="download_started"
+                  href={buildTrackedDownloadUrl(
+                    release,
+                    `Release download ${release.version}`,
+                    `release-download-${release.version}`,
+                    "/#download",
+                  )}
+                  data-analytics-event="click"
                   data-analytics-label={`Release download ${release.version}`}
                   data-analytics-target={`release-download-${release.version}`}
                   data-analytics-release={release.version}

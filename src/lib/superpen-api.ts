@@ -55,6 +55,7 @@ export type AnalyticsOverview = {
     sessions30d: number;
     averageSessionSeconds30d: number;
     totalDownloads30d: number;
+    completedDownloads30d: number;
     engagedSessions30d: number;
   };
   funnel: AnalyticsFunnelStep[];
@@ -77,7 +78,8 @@ export type AnalyticsOverview = {
   }>;
   downloadsByRelease: Array<{
     version: string;
-    downloads: number;
+    startedDownloads: number;
+    completedDownloads: number;
     uniqueVisitors: number;
   }>;
   devices: {
@@ -108,6 +110,35 @@ export type AnalyticsOverview = {
     path?: string;
     label?: string;
     releaseVersion?: string;
+  }>;
+  alerts: Array<{
+    level: "warning" | "critical";
+    type: "error_rate" | "latency";
+    message: string;
+    path: string;
+    method: string;
+    value: number;
+    threshold: number;
+  }>;
+};
+
+export type AnalyticsExport = {
+  generatedAt: string;
+  topPages: Array<{
+    path: string;
+    pageViews: number;
+    uniqueVisitors: number;
+  }>;
+  topCountries: Array<{
+    country: string;
+    visitors: number;
+    downloads: number;
+  }>;
+  topReleases: Array<{
+    version: string;
+    startedDownloads: number;
+    completedDownloads: number;
+    uniqueVisitors: number;
   }>;
 };
 

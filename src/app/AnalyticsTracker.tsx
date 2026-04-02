@@ -39,6 +39,11 @@ function getSessionId() {
   return sessionId;
 }
 
+function syncTrackingCookies() {
+  document.cookie = `${VISITOR_KEY}=${encodeURIComponent(getVisitorId())}; path=/; max-age=${60 * 60 * 24 * 365}; samesite=lax`;
+  document.cookie = `${SESSION_KEY}=${encodeURIComponent(getSessionId())}; path=/; samesite=lax`;
+}
+
 function getElapsedSeconds() {
   const startedAt = Number(window.sessionStorage.getItem(SESSION_STARTED_KEY) || Date.now());
   return Math.max(0, Math.round((Date.now() - startedAt) / 1000));
@@ -74,6 +79,7 @@ export default function AnalyticsTracker() {
   useEffect(() => {
     getVisitorId();
     getSessionId();
+    syncTrackingCookies();
 
     track({
       eventType: "page_view",
