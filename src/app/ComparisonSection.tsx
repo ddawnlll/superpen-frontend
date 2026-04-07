@@ -30,7 +30,7 @@ function AnimatedBadge({ label, icon, index }: AnimatedBadgeProps) {
 
   return (
     <motion.span
-      className="comparison-badge"
+      className="inline-flex items-center gap-3 rounded-full border border-[rgba(255,127,102,0.18)] bg-[var(--surface-strong)] px-4 py-[0.8rem] text-[0.92rem] font-extrabold text-[var(--foreground)] shadow-[0_14px_30px_rgba(79,63,37,0.08)]"
       initial={prefersReducedMotion ? false : { opacity: 0, scale: 0.82, y: 12 }}
       whileInView={prefersReducedMotion ? { opacity: 1 } : { opacity: 1, scale: 1, y: 0 }}
       viewport={{ once: true, amount: 0.55 }}
@@ -42,12 +42,15 @@ function AnimatedBadge({ label, icon, index }: AnimatedBadgeProps) {
       whileHover={prefersReducedMotion ? undefined : { scale: 1.04, y: -2 }}
       whileTap={prefersReducedMotion ? undefined : { scale: 0.98 }}
     >
-      <span className="badge-icon" aria-hidden="true">
+      <span
+        className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-[linear-gradient(135deg,rgba(255,127,102,0.18),rgba(114,213,183,0.24))] text-[0.78rem] font-black text-[#b95845]"
+        aria-hidden="true"
+      >
         {icon}
       </span>
       <span>{label}</span>
       <span
-        className="badge-check"
+        className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-[rgba(114,213,183,0.18)] text-[0.82rem] font-black text-[#1d7f62]"
         aria-hidden="true"
       >
         +
@@ -76,16 +79,16 @@ function ComparisonRowItem({ row, index }: ComparisonRowItemProps) {
     <div
       ref={ref}
       className={[
-        "comparison-row",
-        isWinning ? "is-winning" : "",
-        isBoth ? "is-balanced" : "",
+        "relative grid gap-px overflow-hidden rounded-[1.35rem] border border-[var(--line)] bg-[var(--line)] md:grid-cols-[minmax(0,0.8fr)_minmax(0,1fr)_minmax(0,1fr)]",
+        isWinning ? "shadow-[0_16px_34px_rgba(114,213,183,0.12)]" : "shadow-[0_14px_30px_rgba(79,63,37,0.06)]",
+        isBoth ? "ring-1 ring-[rgba(255,127,102,0.14)]" : "",
       ]
         .filter(Boolean)
         .join(" ")}
       role="row"
     >
       <motion.div
-        className="comparison-cell comparison-category"
+        className="bg-[var(--surface-strong)] px-5 py-4 text-[0.95rem] font-semibold text-[var(--foreground)] max-[767px]:border-b max-[767px]:border-[var(--line)]"
         role="cell"
         initial={prefersReducedMotion ? false : { opacity: 0, x: -16 }}
         animate={
@@ -101,7 +104,7 @@ function ComparisonRowItem({ row, index }: ComparisonRowItemProps) {
       </motion.div>
 
       <motion.div
-        className="comparison-cell comparison-superpen"
+        className="relative bg-[linear-gradient(180deg,rgba(255,255,255,0.95),rgba(245,251,248,0.96))] px-5 py-4 dark:bg-[linear-gradient(180deg,rgba(18,28,26,0.98),rgba(15,23,22,0.98))]"
         role="cell"
         initial={prefersReducedMotion ? false : { opacity: 0, x: -28 }}
         animate={
@@ -115,7 +118,7 @@ function ComparisonRowItem({ row, index }: ComparisonRowItemProps) {
       >
         {isWinning ? (
           <motion.span
-            className="comparison-pill"
+            className="mb-3 inline-flex rounded-full bg-[rgba(114,213,183,0.2)] px-3 py-[0.45rem] text-[0.76rem] font-extrabold uppercase tracking-[0.08em] text-[#1d7f62]"
             initial={prefersReducedMotion ? false : { scale: 0.84, opacity: 0 }}
             animate={
               inView
@@ -134,11 +137,11 @@ function ComparisonRowItem({ row, index }: ComparisonRowItemProps) {
             Superpen leads
           </motion.span>
         ) : null}
-        <p>{row.superpen}</p>
+        <p className="relative z-[1] text-[0.97rem] leading-[1.7] text-[var(--foreground)]">{row.superpen}</p>
       </motion.div>
 
       <motion.div
-        className="comparison-cell"
+        className="bg-[var(--surface)] px-5 py-4"
         role="cell"
         initial={prefersReducedMotion ? false : { opacity: 0, x: 28 }}
         animate={
@@ -150,12 +153,12 @@ function ComparisonRowItem({ row, index }: ComparisonRowItemProps) {
         }
         transition={{ delay: epicDelay, duration: 0.42, ease: "easeOut" }}
       >
-        <p>{row.epicPen}</p>
+        <p className="text-[0.97rem] leading-[1.7] text-[var(--muted)]">{row.epicPen}</p>
       </motion.div>
 
       {isWinning ? (
         <motion.div
-          className="winning-glow"
+          className="pointer-events-none absolute inset-y-0 left-[33%] right-0 bg-[radial-gradient(circle_at_left,rgba(114,213,183,0.18),transparent_55%)]"
           aria-hidden="true"
           initial={prefersReducedMotion ? false : { opacity: 0 }}
           animate={
@@ -186,19 +189,27 @@ export default function ComparisonSection({ comparisonRows }: ComparisonSectionP
   const progressScaleX = useTransform(scrollYProgress, [0, 1], [0, 1]);
 
   return (
-    <section className="section" aria-labelledby="comparison-title">
+    <section
+      className="mx-auto my-0 w-[min(1180px,calc(100%-2rem))] px-[clamp(0rem,1vw,0.25rem)] py-[clamp(3.75rem,7vw,5.75rem)] max-[820px]:w-[min(100%-1.25rem,1180px)] max-[520px]:w-[min(100%-1rem,1180px)] max-[520px]:py-[2.8rem]"
+      aria-labelledby="comparison-title"
+    >
       <motion.div
-        className="section-heading"
+        className="mx-auto max-w-[44rem] text-center max-[700px]:text-left"
         initial={prefersReducedMotion ? false : { opacity: 0, y: 24 }}
         whileInView={prefersReducedMotion ? { opacity: 1 } : { opacity: 1, y: 0 }}
         viewport={{ once: true, amount: 0.45 }}
         transition={{ duration: 0.55, ease: "easeOut" }}
       >
-        <span className="kicker">Superpen vs Epic Pen</span>
-        <h2 id="comparison-title">
+        <span className="inline-flex items-center rounded-full border border-[rgba(255,127,102,0.18)] bg-[var(--surface-strong)] px-3 py-[0.55rem] text-[0.76rem] font-extrabold uppercase tracking-[0.12em] text-[#c7664d] shadow-[0_10px_24px_rgba(210,124,102,0.08)]">
+          Superpen vs Epic Pen
+        </span>
+        <h2
+          id="comparison-title"
+          className="mt-4 text-balance font-[Georgia,Palatino_Linotype,Book_Antiqua,serif] text-[clamp(2.2rem,5vw,3.35rem)] leading-[1.04] tracking-[-0.035em] text-[var(--foreground)]"
+        >
           The comparison gets interesting when you look past basic screen ink.
         </h2>
-        <p>
+        <p className="mt-4 text-[1.02rem] leading-[1.8] text-[var(--muted)] max-[520px]:text-[0.96rem]">
           Epic Pen is established and polished, but Superpen already pulls ahead in
           the areas that matter most for math-heavy explanation and deeper
           customization.
@@ -206,44 +217,67 @@ export default function ComparisonSection({ comparisonRows }: ComparisonSectionP
       </motion.div>
 
       <motion.div
-        className="comparison-spotlight"
+        className="mt-10 grid gap-6 rounded-[2rem] border border-[var(--line)] bg-[linear-gradient(135deg,rgba(255,255,255,0.95),rgba(246,250,248,0.98))] p-[clamp(1.35rem,3vw,2.25rem)] shadow-[var(--shadow)] dark:bg-[linear-gradient(135deg,rgba(18,26,26,0.98),rgba(14,22,20,0.98))] lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] max-[700px]:rounded-[1.5rem] max-[520px]:rounded-[1.2rem] max-[520px]:p-4"
         initial={prefersReducedMotion ? false : { opacity: 0, y: 32 }}
         whileInView={prefersReducedMotion ? { opacity: 1 } : { opacity: 1, y: 0 }}
         viewport={{ once: true, amount: 0.35 }}
         transition={{ duration: 0.6, delay: 0.08, ease: "easeOut" }}
       >
-        <div className="comparison-copy">
-          <span className="comparison-kicker">Why Superpen stands out</span>
-          <h3>More built in, less paywall, and far more math-first tooling.</h3>
-          <p>
+        <div>
+          <span className="inline-flex items-center rounded-full bg-[rgba(114,213,183,0.18)] px-3 py-[0.5rem] text-[0.76rem] font-extrabold uppercase tracking-[0.1em] text-[#1d7f62]">
+            Why Superpen stands out
+          </span>
+          <h3 className="mt-4 text-balance text-[clamp(1.55rem,3vw,2.25rem)] font-semibold tracking-[-0.03em] text-[var(--foreground)]">
+            More built in, less paywall, and far more math-first tooling.
+          </h3>
+          <p className="mt-4 text-[0.99rem] leading-[1.78] text-[var(--muted)]">
             The strongest current advantages are straightforward: no subscription,
             48 built-in math shapes, reusable custom-shape creation, and a more
             ambitious annotation workflow than the usual pen-plus-highlighter setup.
           </p>
         </div>
 
-        <div className="comparison-badges" aria-label="Superpen advantages">
+        <div className="flex flex-wrap gap-3" aria-label="Superpen advantages">
           {BADGES.map((badge, index) => (
             <AnimatedBadge key={badge.label} {...badge} index={index} />
           ))}
         </div>
       </motion.div>
 
-      <div className="comparison-table-wrapper" ref={tableRef}>
-        <div className="comparison-progress-track" aria-hidden="true">
+      <div className="mt-8" ref={tableRef}>
+        <div
+          className="h-2 overflow-hidden rounded-full bg-[rgba(37,65,58,0.08)] dark:bg-[rgba(203,221,214,0.1)]"
+          aria-hidden="true"
+        >
           <motion.div
-            className="comparison-progress-bar"
+            className="h-full origin-left rounded-full bg-[linear-gradient(90deg,#ff7f66,#72d5b7)]"
             style={{ scaleX: prefersReducedMotion ? 1 : progressScaleX }}
           />
         </div>
 
-        <div className="comparison-table" role="table" aria-label="Superpen compared with Epic Pen">
-          <div className="comparison-head comparison-row" role="row">
-            <span role="columnheader">Category</span>
-            <span role="columnheader" className="is-superpen">
+        <div className="mt-4 grid gap-3" role="table" aria-label="Superpen compared with Epic Pen">
+          <div
+            className="hidden grid-cols-[minmax(0,0.8fr)_minmax(0,1fr)_minmax(0,1fr)] gap-px overflow-hidden rounded-[1.2rem] border border-[var(--line)] bg-[var(--line)] md:grid"
+            role="row"
+          >
+            <span
+              className="bg-[var(--surface-strong)] px-5 py-4 text-[0.82rem] font-extrabold uppercase tracking-[0.08em] text-[var(--muted)]"
+              role="columnheader"
+            >
+              Category
+            </span>
+            <span
+              className="bg-[rgba(114,213,183,0.14)] px-5 py-4 text-[0.82rem] font-extrabold uppercase tracking-[0.08em] text-[#1d7f62]"
+              role="columnheader"
+            >
               Superpen
             </span>
-            <span role="columnheader">Epic Pen</span>
+            <span
+              className="bg-[var(--surface-strong)] px-5 py-4 text-[0.82rem] font-extrabold uppercase tracking-[0.08em] text-[var(--muted)]"
+              role="columnheader"
+            >
+              Epic Pen
+            </span>
           </div>
 
           {comparisonRows.map((row, index) => (
@@ -253,13 +287,13 @@ export default function ComparisonSection({ comparisonRows }: ComparisonSectionP
       </div>
 
       <motion.p
-        className="comparison-note"
+        className="mt-5 text-center text-[0.88rem] leading-[1.7] text-[var(--muted)] max-[700px]:text-left"
         initial={prefersReducedMotion ? false : { opacity: 0 }}
         whileInView={{ opacity: 1 }}
         viewport={{ once: true, amount: 0.6 }}
         transition={{ duration: 0.45, ease: "easeOut" }}
       >
-        Comparison reflects the current Superpen repository and Epic Pen&apos;s
+        Comparison reflects the current Superpen repository and Epic Pen’s
         public features, user-guide, and pricing pages.
       </motion.p>
     </section>

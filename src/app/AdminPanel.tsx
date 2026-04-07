@@ -1,6 +1,7 @@
 "use client";
 
-import { FormEvent, useEffect, useMemo, useState } from "react";
+import Link from "next/link";
+import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
 import {
   getApiBaseUrl,
   type AnalyticsExport,
@@ -122,21 +123,24 @@ function BarList({
   getLabel: (item: unknown) => string;
   getValue: (item: unknown) => number;
 }) {
-  const maxValue = items.reduce((max, item) => Math.max(max, getValue(item)), 0) || 1;
+  const maxValue = items.reduce<number>((max, item) => Math.max(max, getValue(item)), 0) || 1;
 
   return (
-    <div className="analytics-bar-list">
+    <div className="grid gap-4">
       {items.map((item, index) => {
         const label = getLabel(item);
         const value = getValue(item);
         return (
-          <div className="analytics-bar-row" key={`${label}-${index}`}>
-            <div className="analytics-bar-copy">
-              <strong>{label}</strong>
-              <span>{formatNumber(value)}</span>
+          <div className="grid gap-2" key={`${label}-${index}`}>
+            <div className="flex items-center justify-between gap-3 text-sm">
+              <strong className="truncate font-semibold text-[var(--foreground)]">{label}</strong>
+              <span className="shrink-0 text-[0.84rem] font-extrabold text-[var(--muted)]">{formatNumber(value)}</span>
             </div>
-            <div className="analytics-bar-track" aria-hidden="true">
-              <div className="analytics-bar-fill" style={{ width: `${Math.max(8, (value / maxValue) * 100)}%` }} />
+            <div className="h-2.5 overflow-hidden rounded-full bg-[rgba(37,65,58,0.08)] dark:bg-[rgba(203,221,214,0.1)]" aria-hidden="true">
+              <div
+                className="h-full rounded-full bg-[linear-gradient(90deg,#ff7f66,#72d5b7)]"
+                style={{ width: `${Math.max(8, (value / maxValue) * 100)}%` }}
+              />
             </div>
           </div>
         );
@@ -169,9 +173,9 @@ export default function AdminPanel() {
     if (authToken) {
       void loadDashboard();
     }
-  }, [authToken]);
+  }, [authToken, loadDashboard]);
 
-  async function authenticatedFetch(path: string, init?: RequestInit) {
+  const authenticatedFetch = useCallback(async (path: string, init?: RequestInit) => {
     const token = authToken || getStoredToken();
     if (!token) {
       throw new Error("You are not logged in.");
@@ -193,9 +197,9 @@ export default function AdminPanel() {
     }
 
     return response;
-  }
+  }, [apiBaseUrl, authToken]);
 
-  async function loadDashboard() {
+  const loadDashboard = useCallback(async () => {
     setIsBusy(true);
     setMessage("Loading releases and analytics...");
     try {
@@ -223,7 +227,7 @@ export default function AdminPanel() {
     } finally {
       setIsBusy(false);
     }
-  }
+  }, [authenticatedFetch]);
 
   async function handleLogin(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -402,43 +406,58 @@ export default function AdminPanel() {
 
   if (!authToken) {
     return (
-      <main className="admin-shell">
-        <section className="admin-panel">
-          <div className="admin-header">
-            <div>
-              <p className="admin-eyebrow">Release management</p>
-              <h1>SuperPen admin</h1>
-              <p className="admin-copy">Log in with your admin account to manage versions, downloads, and analytics.</p>
+      <main className="min-h-screen bg-[var(--background)] px-4 py-8 text-[var(--foreground)] max-[520px]:px-3 max-[520px]:py-4">
+        <section className="mx-auto flex w-full max-w-5xl flex-col gap-6 rounded-[2rem] border border-[var(--line)] bg-[var(--surface)] p-6 shadow-[var(--shadow)] backdrop-blur-[18px] max-[520px]:rounded-[1.25rem] max-[520px]:p-4">
+          <div className="flex flex-wrap items-start justify-between gap-4">
+            <div className="max-w-[36rem]">
+              <p className="text-[0.78rem] font-extrabold uppercase tracking-[0.12em] text-[#c7664d]">Release management</p>
+              <h1 className="mt-2 font-[Georgia,Palatino_Linotype,Book_Antiqua,serif] text-[clamp(2.2rem,5vw,3.4rem)] leading-[1.02] tracking-[-0.04em]">
+                SuperPen admin
+              </h1>
+              <p className="mt-3 text-[1rem] leading-[1.75] text-[var(--muted)]">
+                Log in with your admin account to manage versions, downloads, and analytics.
+              </p>
             </div>
-            <a className="secondary-button" href="/">
+            <Link
+              className="inline-flex min-h-12 items-center justify-center rounded-full border border-[var(--secondary-border)] bg-[var(--secondary-bg)] px-5 py-3 font-extrabold text-[var(--foreground)] transition duration-200 hover:-translate-y-0.5"
+              href="/"
+            >
               Back to site
-            </a>
+            </Link>
           </div>
 
-          <div className="admin-note">{message}</div>
+          <div className="rounded-[1.2rem] border border-[rgba(255,127,102,0.18)] bg-[rgba(255,127,102,0.08)] px-4 py-3 text-sm font-semibold text-[var(--foreground)]">
+            {message}
+          </div>
 
-          <section className="admin-card admin-login-card">
-            <h2>Sign in</h2>
-            <form className="admin-form admin-login-form" onSubmit={handleLogin}>
-              <label className="admin-field">
-                <span>Username</span>
+          <section className="mx-auto w-full max-w-xl rounded-[1.5rem] border border-[var(--line)] bg-[var(--surface-strong)] p-6 shadow-[0_18px_36px_rgba(79,63,37,0.08)] max-[520px]:rounded-[1.2rem] max-[520px]:p-4">
+            <h2 className="text-[1.4rem] font-semibold tracking-[-0.03em] text-[var(--foreground)]">Sign in</h2>
+            <form className="mt-5 grid gap-4" onSubmit={handleLogin}>
+              <label className="grid gap-2">
+                <span className="text-[0.84rem] font-extrabold uppercase tracking-[0.08em] text-[var(--muted)]">Username</span>
                 <input
+                  className="min-h-12 rounded-[1rem] border border-[var(--line)] bg-[var(--surface)] px-4 text-[var(--foreground)] outline-none transition focus:border-[rgba(255,127,102,0.4)] focus:ring-2 focus:ring-[rgba(255,127,102,0.16)]"
                   value={loginForm.username}
                   onChange={(event) => setLoginForm((current) => ({ ...current, username: event.target.value }))}
                   autoComplete="username"
                 />
               </label>
-              <label className="admin-field">
-                <span>Password</span>
+              <label className="grid gap-2">
+                <span className="text-[0.84rem] font-extrabold uppercase tracking-[0.08em] text-[var(--muted)]">Password</span>
                 <input
+                  className="min-h-12 rounded-[1rem] border border-[var(--line)] bg-[var(--surface)] px-4 text-[var(--foreground)] outline-none transition focus:border-[rgba(255,127,102,0.4)] focus:ring-2 focus:ring-[rgba(255,127,102,0.16)]"
                   type="password"
                   value={loginForm.password}
                   onChange={(event) => setLoginForm((current) => ({ ...current, password: event.target.value }))}
                   autoComplete="current-password"
                 />
               </label>
-              <div className="admin-form-actions">
-                <button type="submit" className="primary-button" disabled={isBusy}>
+              <div className="flex justify-start pt-2">
+                <button
+                  type="submit"
+                  className="inline-flex min-h-12 items-center justify-center rounded-full bg-[#ff7f66] px-6 py-3 font-extrabold text-white shadow-[0_12px_24px_rgba(255,127,102,0.18)] transition duration-200 hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-60"
+                  disabled={isBusy}
+                >
                   Sign in
                 </button>
               </div>
@@ -450,93 +469,117 @@ export default function AdminPanel() {
   }
 
   return (
-    <main className="admin-shell">
-      <section className="admin-panel">
-        <div className="admin-header">
-          <div>
-            <p className="admin-eyebrow">Release management and analytics</p>
-            <h1>SuperPen admin</h1>
-            <p className="admin-copy">
+    <main className="min-h-screen bg-[var(--background)] px-4 py-8 text-[var(--foreground)] max-[520px]:px-3 max-[520px]:py-4">
+      <section className="mx-auto flex w-full max-w-[1320px] flex-col gap-6 rounded-[2rem] border border-[var(--line)] bg-[var(--surface)] p-6 shadow-[var(--shadow)] backdrop-blur-[18px] max-[520px]:rounded-[1.25rem] max-[520px]:p-4">
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div className="max-w-[42rem]">
+            <p className="text-[0.78rem] font-extrabold uppercase tracking-[0.12em] text-[#c7664d]">Release management and analytics</p>
+            <h1 className="mt-2 font-[Georgia,Palatino_Linotype,Book_Antiqua,serif] text-[clamp(2.2rem,5vw,3.4rem)] leading-[1.02] tracking-[-0.04em]">
+              SuperPen admin
+            </h1>
+            <p className="mt-3 text-[1rem] leading-[1.75] text-[var(--muted)]">
               Manage releases, monitor adoption, inspect user flows, and watch API health from one place.
             </p>
           </div>
-          <div className="admin-top-actions">
-            <button type="button" className="secondary-button" onClick={loadDashboard} disabled={isBusy}>
+          <div className="flex flex-wrap gap-3">
+            <button
+              type="button"
+              className="inline-flex min-h-12 items-center justify-center rounded-full border border-[var(--secondary-border)] bg-[var(--secondary-bg)] px-5 py-3 font-extrabold text-[var(--foreground)] transition duration-200 hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-60"
+              onClick={loadDashboard}
+              disabled={isBusy}
+            >
               Refresh
             </button>
-            <button type="button" className="secondary-button" onClick={exportTopReport} disabled={isBusy}>
+            <button
+              type="button"
+              className="inline-flex min-h-12 items-center justify-center rounded-full border border-[var(--secondary-border)] bg-[var(--secondary-bg)] px-5 py-3 font-extrabold text-[var(--foreground)] transition duration-200 hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-60"
+              onClick={exportTopReport}
+              disabled={isBusy}
+            >
               Export report
             </button>
-            <button type="button" className="secondary-button" onClick={logout}>
+            <button
+              type="button"
+              className="inline-flex min-h-12 items-center justify-center rounded-full border border-[var(--secondary-border)] bg-[var(--secondary-bg)] px-5 py-3 font-extrabold text-[var(--foreground)] transition duration-200 hover:-translate-y-0.5"
+              onClick={logout}
+            >
               Log out
             </button>
-            <a className="secondary-button" href="/">
+            <Link
+              className="inline-flex min-h-12 items-center justify-center rounded-full border border-[var(--secondary-border)] bg-[var(--secondary-bg)] px-5 py-3 font-extrabold text-[var(--foreground)] transition duration-200 hover:-translate-y-0.5"
+              href="/"
+            >
               Back to site
-            </a>
+            </Link>
           </div>
         </div>
 
-        <div className="admin-note">{message}</div>
+        <div className="rounded-[1.2rem] border border-[rgba(255,127,102,0.18)] bg-[rgba(255,127,102,0.08)] px-4 py-3 text-sm font-semibold text-[var(--foreground)]">
+          {message}
+        </div>
 
         {analyticsOverview && (
           <>
-            <section className="analytics-section">
-              <div className="analytics-summary-grid">
-                <article className="analytics-metric-card">
-                  <span>Page views (30d)</span>
-                  <strong>{formatNumber(analyticsOverview.summary.pageViews30d)}</strong>
+            <section className="grid gap-4">
+              <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+                <article className="rounded-[1.35rem] border border-[var(--line)] bg-[var(--surface-strong)] p-4 shadow-[0_14px_30px_rgba(79,63,37,0.06)]">
+                  <span className="text-[0.8rem] font-extrabold uppercase tracking-[0.08em] text-[var(--muted)]">Page views (30d)</span>
+                  <strong className="mt-2 block text-[1.7rem] font-semibold tracking-[-0.03em] text-[var(--foreground)]">{formatNumber(analyticsOverview.summary.pageViews30d)}</strong>
                 </article>
-                <article className="analytics-metric-card">
-                  <span>Unique visitors (30d)</span>
-                  <strong>{formatNumber(analyticsOverview.summary.uniqueVisitors30d)}</strong>
+                <article className="rounded-[1.35rem] border border-[var(--line)] bg-[var(--surface-strong)] p-4 shadow-[0_14px_30px_rgba(79,63,37,0.06)]">
+                  <span className="text-[0.8rem] font-extrabold uppercase tracking-[0.08em] text-[var(--muted)]">Unique visitors (30d)</span>
+                  <strong className="mt-2 block text-[1.7rem] font-semibold tracking-[-0.03em] text-[var(--foreground)]">{formatNumber(analyticsOverview.summary.uniqueVisitors30d)}</strong>
                 </article>
-                <article className="analytics-metric-card">
-                  <span>Downloads (30d)</span>
-                  <strong>{formatNumber(analyticsOverview.summary.totalDownloads30d)}</strong>
+                <article className="rounded-[1.35rem] border border-[var(--line)] bg-[var(--surface-strong)] p-4 shadow-[0_14px_30px_rgba(79,63,37,0.06)]">
+                  <span className="text-[0.8rem] font-extrabold uppercase tracking-[0.08em] text-[var(--muted)]">Downloads (30d)</span>
+                  <strong className="mt-2 block text-[1.7rem] font-semibold tracking-[-0.03em] text-[var(--foreground)]">{formatNumber(analyticsOverview.summary.totalDownloads30d)}</strong>
                 </article>
-                <article className="analytics-metric-card">
-                  <span>Completed downloads (30d)</span>
-                  <strong>{formatNumber(analyticsOverview.summary.completedDownloads30d)}</strong>
+                <article className="rounded-[1.35rem] border border-[var(--line)] bg-[var(--surface-strong)] p-4 shadow-[0_14px_30px_rgba(79,63,37,0.06)]">
+                  <span className="text-[0.8rem] font-extrabold uppercase tracking-[0.08em] text-[var(--muted)]">Completed downloads (30d)</span>
+                  <strong className="mt-2 block text-[1.7rem] font-semibold tracking-[-0.03em] text-[var(--foreground)]">{formatNumber(analyticsOverview.summary.completedDownloads30d)}</strong>
                 </article>
-                <article className="analytics-metric-card">
-                  <span>Avg session</span>
-                  <strong>{formatDuration(analyticsOverview.summary.averageSessionSeconds30d)}</strong>
+                <article className="rounded-[1.35rem] border border-[var(--line)] bg-[var(--surface-strong)] p-4 shadow-[0_14px_30px_rgba(79,63,37,0.06)]">
+                  <span className="text-[0.8rem] font-extrabold uppercase tracking-[0.08em] text-[var(--muted)]">Avg session</span>
+                  <strong className="mt-2 block text-[1.7rem] font-semibold tracking-[-0.03em] text-[var(--foreground)]">{formatDuration(analyticsOverview.summary.averageSessionSeconds30d)}</strong>
                 </article>
-                <article className="analytics-metric-card">
-                  <span>Retention D1 / D7 / D30</span>
-                  <strong>
+                <article className="rounded-[1.35rem] border border-[var(--line)] bg-[var(--surface-strong)] p-4 shadow-[0_14px_30px_rgba(79,63,37,0.06)]">
+                  <span className="text-[0.8rem] font-extrabold uppercase tracking-[0.08em] text-[var(--muted)]">Retention D1 / D7 / D30</span>
+                  <strong className="mt-2 block text-[1.15rem] font-semibold tracking-[-0.03em] text-[var(--foreground)]">
                     {formatPercent(analyticsOverview.retention.day1)} / {formatPercent(analyticsOverview.retention.day7)} / {formatPercent(analyticsOverview.retention.day30)}
                   </strong>
                 </article>
-                <article className="analytics-metric-card">
-                  <span>Engaged sessions</span>
-                  <strong>{formatNumber(analyticsOverview.summary.engagedSessions30d)}</strong>
+                <article className="rounded-[1.35rem] border border-[var(--line)] bg-[var(--surface-strong)] p-4 shadow-[0_14px_30px_rgba(79,63,37,0.06)]">
+                  <span className="text-[0.8rem] font-extrabold uppercase tracking-[0.08em] text-[var(--muted)]">Engaged sessions</span>
+                  <strong className="mt-2 block text-[1.7rem] font-semibold tracking-[-0.03em] text-[var(--foreground)]">{formatNumber(analyticsOverview.summary.engagedSessions30d)}</strong>
                 </article>
               </div>
             </section>
 
-            <section className="analytics-grid">
-              <article className="admin-card analytics-card">
-                <h2>Alerts</h2>
-                <div className="analytics-alert-list">
+            <section className="grid gap-4 xl:grid-cols-2">
+              <article className="rounded-[1.45rem] border border-[var(--line)] bg-[var(--surface-strong)] p-5 shadow-[0_18px_36px_rgba(79,63,37,0.08)]">
+                <h2 className="text-[1.15rem] font-semibold tracking-[-0.03em] text-[var(--foreground)]">Alerts</h2>
+                <div className="mt-4 grid gap-3">
                   {analyticsOverview.alerts.length > 0 ? (
                     analyticsOverview.alerts.map((alert, index) => (
                       <div
                         key={`${alert.method}-${alert.path}-${alert.type}-${index}`}
-                        className={`analytics-alert-item ${alert.level === "critical" ? "is-critical" : "is-warning"}`}
+                        className={alert.level === "critical"
+                          ? "rounded-[1rem] border border-[rgba(220,38,38,0.2)] bg-[rgba(220,38,38,0.08)] px-4 py-3"
+                          : "rounded-[1rem] border border-[rgba(245,158,11,0.24)] bg-[rgba(245,158,11,0.1)] px-4 py-3"
+                        }
                       >
-                        <strong>{alert.level.toUpperCase()}</strong>
-                        <p>{alert.message}</p>
+                        <strong className="text-[0.78rem] font-extrabold uppercase tracking-[0.08em] text-[var(--foreground)]">{alert.level.toUpperCase()}</strong>
+                        <p className="mt-1 text-[0.96rem] leading-[1.7] text-[var(--foreground)]">{alert.message}</p>
                       </div>
                     ))
                   ) : (
-                    <p className="admin-empty">No alert thresholds are currently breached.</p>
+                    <p className="rounded-[1rem] border border-[var(--line)] bg-[var(--surface)] px-4 py-3 text-sm text-[var(--muted)]">No alert thresholds are currently breached.</p>
                   )}
                 </div>
               </article>
 
-              <article className="admin-card analytics-card">
-                <h2>Conversion funnel</h2>
+              <article className="rounded-[1.45rem] border border-[var(--line)] bg-[var(--surface-strong)] p-5 shadow-[0_18px_36px_rgba(79,63,37,0.08)]">
+                <h2 className="text-[1.15rem] font-semibold tracking-[-0.03em] text-[var(--foreground)]">Conversion funnel</h2>
                 <BarList
                   items={analyticsOverview.funnel}
                   getLabel={(item) => (item as { step: string }).step}
@@ -544,25 +587,25 @@ export default function AdminPanel() {
                 />
               </article>
 
-              <article className="admin-card analytics-card">
-                <h2>Downloads by release</h2>
-                <div className="analytics-table-wrap">
-                  <table className="analytics-table">
-                    <thead>
+              <article className="rounded-[1.45rem] border border-[var(--line)] bg-[var(--surface-strong)] p-5 shadow-[0_18px_36px_rgba(79,63,37,0.08)]">
+                <h2 className="text-[1.15rem] font-semibold tracking-[-0.03em] text-[var(--foreground)]">Downloads by release</h2>
+                <div className="mt-4 overflow-x-auto rounded-[1rem] border border-[var(--line)]">
+                  <table className="min-w-full border-collapse text-left text-sm">
+                    <thead className="bg-[var(--surface)] text-[0.78rem] uppercase tracking-[0.08em] text-[var(--muted)]">
                       <tr>
-                        <th>Release</th>
-                        <th>Started</th>
-                        <th>Completed</th>
-                        <th>Unique visitors</th>
+                        <th className="px-4 py-3 font-extrabold">Release</th>
+                        <th className="px-4 py-3 font-extrabold">Started</th>
+                        <th className="px-4 py-3 font-extrabold">Completed</th>
+                        <th className="px-4 py-3 font-extrabold">Unique visitors</th>
                       </tr>
                     </thead>
-                    <tbody>
+                    <tbody className="bg-[var(--surface-strong)]">
                       {analyticsOverview.downloadsByRelease.map((row) => (
-                        <tr key={row.version}>
-                          <td>{row.version}</td>
-                          <td>{formatNumber(row.startedDownloads)}</td>
-                          <td>{formatNumber(row.completedDownloads)}</td>
-                          <td>{formatNumber(row.uniqueVisitors)}</td>
+                        <tr key={row.version} className="border-t border-[var(--line)]">
+                          <td className="px-4 py-3 font-semibold text-[var(--foreground)]">{row.version}</td>
+                          <td className="px-4 py-3 text-[var(--muted)]">{formatNumber(row.startedDownloads)}</td>
+                          <td className="px-4 py-3 text-[var(--muted)]">{formatNumber(row.completedDownloads)}</td>
+                          <td className="px-4 py-3 text-[var(--muted)]">{formatNumber(row.uniqueVisitors)}</td>
                         </tr>
                       ))}
                     </tbody>
@@ -570,8 +613,8 @@ export default function AdminPanel() {
                 </div>
               </article>
 
-              <article className="admin-card analytics-card">
-                <h2>Clicks by target</h2>
+              <article className="rounded-[1.45rem] border border-[var(--line)] bg-[var(--surface-strong)] p-5 shadow-[0_18px_36px_rgba(79,63,37,0.08)]">
+                <h2 className="text-[1.15rem] font-semibold tracking-[-0.03em] text-[var(--foreground)]">Clicks by target</h2>
                 <BarList
                   items={analyticsOverview.clicksByTarget}
                   getLabel={(item) => (item as { target: string }).target}
@@ -579,27 +622,27 @@ export default function AdminPanel() {
                 />
               </article>
 
-              <article className="admin-card analytics-card">
-                <h2>Geographic results</h2>
-                <div className="analytics-table-wrap">
-                  <table className="analytics-table">
-                    <thead>
+              <article className="rounded-[1.45rem] border border-[var(--line)] bg-[var(--surface-strong)] p-5 shadow-[0_18px_36px_rgba(79,63,37,0.08)]">
+                <h2 className="text-[1.15rem] font-semibold tracking-[-0.03em] text-[var(--foreground)]">Geographic results</h2>
+                <div className="mt-4 overflow-x-auto rounded-[1rem] border border-[var(--line)]">
+                  <table className="min-w-full border-collapse text-left text-sm">
+                    <thead className="bg-[var(--surface)] text-[0.78rem] uppercase tracking-[0.08em] text-[var(--muted)]">
                       <tr>
-                        <th>Country</th>
-                        <th>Visitors</th>
-                        <th>Views</th>
-                        <th>Downloads</th>
-                        <th>Avg session</th>
+                        <th className="px-4 py-3 font-extrabold">Country</th>
+                        <th className="px-4 py-3 font-extrabold">Visitors</th>
+                        <th className="px-4 py-3 font-extrabold">Views</th>
+                        <th className="px-4 py-3 font-extrabold">Downloads</th>
+                        <th className="px-4 py-3 font-extrabold">Avg session</th>
                       </tr>
                     </thead>
-                    <tbody>
+                    <tbody className="bg-[var(--surface-strong)]">
                       {analyticsOverview.geoByCountry.map((row) => (
-                        <tr key={row.country}>
-                          <td>{row.country}</td>
-                          <td>{formatNumber(row.visitors)}</td>
-                          <td>{formatNumber(row.pageViews)}</td>
-                          <td>{formatNumber(row.downloads)}</td>
-                          <td>{formatDuration(row.averageSessionSeconds)}</td>
+                        <tr key={row.country} className="border-t border-[var(--line)]">
+                          <td className="px-4 py-3 font-semibold text-[var(--foreground)]">{row.country}</td>
+                          <td className="px-4 py-3 text-[var(--muted)]">{formatNumber(row.visitors)}</td>
+                          <td className="px-4 py-3 text-[var(--muted)]">{formatNumber(row.pageViews)}</td>
+                          <td className="px-4 py-3 text-[var(--muted)]">{formatNumber(row.downloads)}</td>
+                          <td className="px-4 py-3 text-[var(--muted)]">{formatDuration(row.averageSessionSeconds)}</td>
                         </tr>
                       ))}
                     </tbody>
@@ -608,27 +651,27 @@ export default function AdminPanel() {
               </article>
 
               {analyticsExport && (
-                <article className="admin-card analytics-card">
-                  <h2>Latest export snapshot</h2>
-                  <div className="analytics-split-list">
-                    <div>
-                      <h3>Top pages</h3>
+                <article className="rounded-[1.45rem] border border-[var(--line)] bg-[var(--surface-strong)] p-5 shadow-[0_18px_36px_rgba(79,63,37,0.08)]">
+                  <h2 className="text-[1.15rem] font-semibold tracking-[-0.03em] text-[var(--foreground)]">Latest export snapshot</h2>
+                  <div className="mt-4 grid gap-5 lg:grid-cols-3">
+                    <div className="grid gap-3">
+                      <h3 className="text-[0.88rem] font-extrabold uppercase tracking-[0.08em] text-[var(--muted)]">Top pages</h3>
                       <BarList
                         items={analyticsExport.topPages}
                         getLabel={(item) => (item as { path: string }).path}
                         getValue={(item) => (item as { pageViews: number }).pageViews}
                       />
                     </div>
-                    <div>
-                      <h3>Top countries</h3>
+                    <div className="grid gap-3">
+                      <h3 className="text-[0.88rem] font-extrabold uppercase tracking-[0.08em] text-[var(--muted)]">Top countries</h3>
                       <BarList
                         items={analyticsExport.topCountries}
                         getLabel={(item) => (item as { country: string }).country}
                         getValue={(item) => (item as { visitors: number }).visitors}
                       />
                     </div>
-                    <div>
-                      <h3>Top releases</h3>
+                    <div className="grid gap-3">
+                      <h3 className="text-[0.88rem] font-extrabold uppercase tracking-[0.08em] text-[var(--muted)]">Top releases</h3>
                       <BarList
                         items={analyticsExport.topReleases}
                         getLabel={(item) => (item as { version: string }).version}
@@ -639,27 +682,27 @@ export default function AdminPanel() {
                 </article>
               )}
 
-              <article className="admin-card analytics-card">
-                <h2>Device mix</h2>
-                <div className="analytics-split-list">
-                  <div>
-                    <h3>Browsers</h3>
+              <article className="rounded-[1.45rem] border border-[var(--line)] bg-[var(--surface-strong)] p-5 shadow-[0_18px_36px_rgba(79,63,37,0.08)]">
+                <h2 className="text-[1.15rem] font-semibold tracking-[-0.03em] text-[var(--foreground)]">Device mix</h2>
+                <div className="mt-4 grid gap-5 lg:grid-cols-3">
+                  <div className="grid gap-3">
+                    <h3 className="text-[0.88rem] font-extrabold uppercase tracking-[0.08em] text-[var(--muted)]">Browsers</h3>
                     <BarList
                       items={analyticsOverview.devices.browsers}
                       getLabel={(item) => (item as { name: string }).name}
                       getValue={(item) => (item as { count: number }).count}
                     />
                   </div>
-                  <div>
-                    <h3>Operating systems</h3>
+                  <div className="grid gap-3">
+                    <h3 className="text-[0.88rem] font-extrabold uppercase tracking-[0.08em] text-[var(--muted)]">Operating systems</h3>
                     <BarList
                       items={analyticsOverview.devices.operatingSystems}
                       getLabel={(item) => (item as { name: string }).name}
                       getValue={(item) => (item as { count: number }).count}
                     />
                   </div>
-                  <div>
-                    <h3>Device types</h3>
+                  <div className="grid gap-3">
+                    <h3 className="text-[0.88rem] font-extrabold uppercase tracking-[0.08em] text-[var(--muted)]">Device types</h3>
                     <BarList
                       items={analyticsOverview.devices.deviceTypes}
                       getLabel={(item) => (item as { name: string }).name}
@@ -669,25 +712,25 @@ export default function AdminPanel() {
                 </div>
               </article>
 
-              <article className="admin-card analytics-card analytics-card-wide">
-                <h2>Traffic by day</h2>
-                <div className="analytics-table-wrap">
-                  <table className="analytics-table">
-                    <thead>
+              <article className="rounded-[1.45rem] border border-[var(--line)] bg-[var(--surface-strong)] p-5 shadow-[0_18px_36px_rgba(79,63,37,0.08)] xl:col-span-2">
+                <h2 className="text-[1.15rem] font-semibold tracking-[-0.03em] text-[var(--foreground)]">Traffic by day</h2>
+                <div className="mt-4 overflow-x-auto rounded-[1rem] border border-[var(--line)]">
+                  <table className="min-w-full border-collapse text-left text-sm">
+                    <thead className="bg-[var(--surface)] text-[0.78rem] uppercase tracking-[0.08em] text-[var(--muted)]">
                       <tr>
-                        <th>Date</th>
-                        <th>Page views</th>
-                        <th>Unique visitors</th>
-                        <th>Downloads</th>
+                        <th className="px-4 py-3 font-extrabold">Date</th>
+                        <th className="px-4 py-3 font-extrabold">Page views</th>
+                        <th className="px-4 py-3 font-extrabold">Unique visitors</th>
+                        <th className="px-4 py-3 font-extrabold">Downloads</th>
                       </tr>
                     </thead>
-                    <tbody>
+                    <tbody className="bg-[var(--surface-strong)]">
                       {analyticsOverview.trafficByDay.slice(-14).map((row) => (
-                        <tr key={row.date}>
-                          <td>{row.date}</td>
-                          <td>{formatNumber(row.pageViews)}</td>
-                          <td>{formatNumber(row.uniqueVisitors)}</td>
-                          <td>{formatNumber(row.downloads)}</td>
+                        <tr key={row.date} className="border-t border-[var(--line)]">
+                          <td className="px-4 py-3 font-semibold text-[var(--foreground)]">{row.date}</td>
+                          <td className="px-4 py-3 text-[var(--muted)]">{formatNumber(row.pageViews)}</td>
+                          <td className="px-4 py-3 text-[var(--muted)]">{formatNumber(row.uniqueVisitors)}</td>
+                          <td className="px-4 py-3 text-[var(--muted)]">{formatNumber(row.downloads)}</td>
                         </tr>
                       ))}
                     </tbody>
@@ -695,29 +738,29 @@ export default function AdminPanel() {
                 </div>
               </article>
 
-              <article className="admin-card analytics-card analytics-card-wide">
-                <h2>API performance</h2>
-                <div className="analytics-table-wrap">
-                  <table className="analytics-table">
-                    <thead>
+              <article className="rounded-[1.45rem] border border-[var(--line)] bg-[var(--surface-strong)] p-5 shadow-[0_18px_36px_rgba(79,63,37,0.08)] xl:col-span-2">
+                <h2 className="text-[1.15rem] font-semibold tracking-[-0.03em] text-[var(--foreground)]">API performance</h2>
+                <div className="mt-4 overflow-x-auto rounded-[1rem] border border-[var(--line)]">
+                  <table className="min-w-full border-collapse text-left text-sm">
+                    <thead className="bg-[var(--surface)] text-[0.78rem] uppercase tracking-[0.08em] text-[var(--muted)]">
                       <tr>
-                        <th>Endpoint</th>
-                        <th>Requests</th>
-                        <th>Avg</th>
-                        <th>P95</th>
-                        <th>P99</th>
-                        <th>Error rate</th>
+                        <th className="px-4 py-3 font-extrabold">Endpoint</th>
+                        <th className="px-4 py-3 font-extrabold">Requests</th>
+                        <th className="px-4 py-3 font-extrabold">Avg</th>
+                        <th className="px-4 py-3 font-extrabold">P95</th>
+                        <th className="px-4 py-3 font-extrabold">P99</th>
+                        <th className="px-4 py-3 font-extrabold">Error rate</th>
                       </tr>
                     </thead>
-                    <tbody>
+                    <tbody className="bg-[var(--surface-strong)]">
                       {analyticsOverview.apiPerformance.map((row) => (
-                        <tr key={`${row.method}-${row.path}`}>
-                          <td>{row.method} {row.path}</td>
-                          <td>{formatNumber(row.requests)}</td>
-                          <td>{row.averageMs}ms</td>
-                          <td>{row.p95Ms}ms</td>
-                          <td>{row.p99Ms}ms</td>
-                          <td>{formatPercent(row.errorRate)}</td>
+                        <tr key={`${row.method}-${row.path}`} className="border-t border-[var(--line)]">
+                          <td className="px-4 py-3 font-semibold text-[var(--foreground)]">{row.method} {row.path}</td>
+                          <td className="px-4 py-3 text-[var(--muted)]">{formatNumber(row.requests)}</td>
+                          <td className="px-4 py-3 text-[var(--muted)]">{row.averageMs}ms</td>
+                          <td className="px-4 py-3 text-[var(--muted)]">{row.p95Ms}ms</td>
+                          <td className="px-4 py-3 text-[var(--muted)]">{row.p99Ms}ms</td>
+                          <td className="px-4 py-3 text-[var(--muted)]">{formatPercent(row.errorRate)}</td>
                         </tr>
                       ))}
                     </tbody>
@@ -725,8 +768,8 @@ export default function AdminPanel() {
                 </div>
               </article>
 
-              <article className="admin-card analytics-card">
-                <h2>Referrers</h2>
+              <article className="rounded-[1.45rem] border border-[var(--line)] bg-[var(--surface-strong)] p-5 shadow-[0_18px_36px_rgba(79,63,37,0.08)]">
+                <h2 className="text-[1.15rem] font-semibold tracking-[-0.03em] text-[var(--foreground)]">Referrers</h2>
                 <BarList
                   items={analyticsOverview.referrers}
                   getLabel={(item) => (item as { source: string }).source}
@@ -734,14 +777,14 @@ export default function AdminPanel() {
                 />
               </article>
 
-              <article className="admin-card analytics-card">
-                <h2>Recent events</h2>
-                <div className="analytics-event-list">
+              <article className="rounded-[1.45rem] border border-[var(--line)] bg-[var(--surface-strong)] p-5 shadow-[0_18px_36px_rgba(79,63,37,0.08)]">
+                <h2 className="text-[1.15rem] font-semibold tracking-[-0.03em] text-[var(--foreground)]">Recent events</h2>
+                <div className="mt-4 grid gap-3">
                   {analyticsOverview.recentEvents.map((event) => (
-                    <div className="analytics-event-item" key={`${event.occurredAt}-${event.eventType}-${event.sessionId || ""}`}>
-                      <strong>{event.eventType}</strong>
-                      <span>{formatDateTime(event.occurredAt)}</span>
-                      <p>
+                    <div className="rounded-[1rem] border border-[var(--line)] bg-[var(--surface)] px-4 py-3" key={`${event.occurredAt}-${event.eventType}-${event.sessionId || ""}`}>
+                      <strong className="text-[0.84rem] font-extrabold uppercase tracking-[0.08em] text-[#c7664d]">{event.eventType}</strong>
+                      <span className="mt-1 block text-[0.82rem] text-[var(--muted)]">{formatDateTime(event.occurredAt)}</span>
+                      <p className="mt-2 text-[0.96rem] leading-[1.7] text-[var(--foreground)]">
                         {event.path || event.label || "No label"}
                         {event.releaseVersion ? ` - ${event.releaseVersion}` : ""}
                       </p>
@@ -753,129 +796,139 @@ export default function AdminPanel() {
           </>
         )}
 
-        <section className="analytics-grid">
-          <section className="admin-card analytics-card">
-            <h2>Create or update release</h2>
-            <form className="admin-form" onSubmit={submitRelease}>
-              <label className="admin-field">
-                <span>Version</span>
+        <section className="grid gap-4 xl:grid-cols-2">
+          <section className="rounded-[1.45rem] border border-[var(--line)] bg-[var(--surface-strong)] p-5 shadow-[0_18px_36px_rgba(79,63,37,0.08)]">
+            <h2 className="text-[1.15rem] font-semibold tracking-[-0.03em] text-[var(--foreground)]">Create or update release</h2>
+            <form className="mt-4 grid gap-4 sm:grid-cols-2" onSubmit={submitRelease}>
+              <label className="grid gap-2">
+                <span className="text-[0.8rem] font-extrabold uppercase tracking-[0.08em] text-[var(--muted)]">Version</span>
                 <input
+                  className="min-h-12 rounded-[1rem] border border-[var(--line)] bg-[var(--surface)] px-4 text-[var(--foreground)] outline-none transition focus:border-[rgba(255,127,102,0.4)] focus:ring-2 focus:ring-[rgba(255,127,102,0.16)]"
                   value={form.version}
                   onChange={(event) => setForm((current) => ({ ...current, version: event.target.value }))}
                   placeholder="1.0.0"
                 />
               </label>
-              <label className="admin-field">
-                <span>Channel</span>
+              <label className="grid gap-2">
+                <span className="text-[0.8rem] font-extrabold uppercase tracking-[0.08em] text-[var(--muted)]">Channel</span>
                 <input
+                  className="min-h-12 rounded-[1rem] border border-[var(--line)] bg-[var(--surface)] px-4 text-[var(--foreground)] outline-none transition focus:border-[rgba(255,127,102,0.4)] focus:ring-2 focus:ring-[rgba(255,127,102,0.16)]"
                   value={form.channel}
                   onChange={(event) => setForm((current) => ({ ...current, channel: event.target.value }))}
                   placeholder="stable"
                 />
               </label>
-              <label className="admin-field">
-                <span>Platform</span>
+              <label className="grid gap-2">
+                <span className="text-[0.8rem] font-extrabold uppercase tracking-[0.08em] text-[var(--muted)]">Platform</span>
                 <input
+                  className="min-h-12 rounded-[1rem] border border-[var(--line)] bg-[var(--surface)] px-4 text-[var(--foreground)] outline-none transition focus:border-[rgba(255,127,102,0.4)] focus:ring-2 focus:ring-[rgba(255,127,102,0.16)]"
                   value={form.platform}
                   onChange={(event) => setForm((current) => ({ ...current, platform: event.target.value }))}
                   placeholder="Windows"
                 />
               </label>
-              <label className="admin-field admin-field-wide">
-                <span>Download URL</span>
+              <label className="grid gap-2 sm:col-span-2">
+                <span className="text-[0.8rem] font-extrabold uppercase tracking-[0.08em] text-[var(--muted)]">Download URL</span>
                 <input
+                  className="min-h-12 rounded-[1rem] border border-[var(--line)] bg-[var(--surface)] px-4 text-[var(--foreground)] outline-none transition focus:border-[rgba(255,127,102,0.4)] focus:ring-2 focus:ring-[rgba(255,127,102,0.16)]"
                   value={form.downloadUrl}
                   onChange={(event) => setForm((current) => ({ ...current, downloadUrl: event.target.value }))}
                   placeholder="https://..."
                 />
               </label>
-              <label className="admin-field">
-                <span>Published at</span>
+              <label className="grid gap-2">
+                <span className="text-[0.8rem] font-extrabold uppercase tracking-[0.08em] text-[var(--muted)]">Published at</span>
                 <input
+                  className="min-h-12 rounded-[1rem] border border-[var(--line)] bg-[var(--surface)] px-4 text-[var(--foreground)] outline-none transition focus:border-[rgba(255,127,102,0.4)] focus:ring-2 focus:ring-[rgba(255,127,102,0.16)]"
                   value={form.publishedAt}
                   onChange={(event) => setForm((current) => ({ ...current, publishedAt: event.target.value }))}
                   placeholder="2026-04-01T00:00:00Z"
                 />
               </label>
-              <label className="admin-field">
-                <span>File size</span>
+              <label className="grid gap-2">
+                <span className="text-[0.8rem] font-extrabold uppercase tracking-[0.08em] text-[var(--muted)]">File size</span>
                 <input
+                  className="min-h-12 rounded-[1rem] border border-[var(--line)] bg-[var(--surface)] px-4 text-[var(--foreground)] outline-none transition focus:border-[rgba(255,127,102,0.4)] focus:ring-2 focus:ring-[rgba(255,127,102,0.16)]"
                   value={form.fileSize}
                   onChange={(event) => setForm((current) => ({ ...current, fileSize: event.target.value }))}
                   placeholder="42 MB"
                 />
               </label>
-              <label className="admin-field admin-field-wide">
-                <span>Checksum</span>
+              <label className="grid gap-2 sm:col-span-2">
+                <span className="text-[0.8rem] font-extrabold uppercase tracking-[0.08em] text-[var(--muted)]">Checksum</span>
                 <input
+                  className="min-h-12 rounded-[1rem] border border-[var(--line)] bg-[var(--surface)] px-4 text-[var(--foreground)] outline-none transition focus:border-[rgba(255,127,102,0.4)] focus:ring-2 focus:ring-[rgba(255,127,102,0.16)]"
                   value={form.checksum}
                   onChange={(event) => setForm((current) => ({ ...current, checksum: event.target.value }))}
                   placeholder="sha256..."
                 />
               </label>
-              <label className="admin-field admin-field-wide">
-                <span>Summary</span>
+              <label className="grid gap-2 sm:col-span-2">
+                <span className="text-[0.8rem] font-extrabold uppercase tracking-[0.08em] text-[var(--muted)]">Summary</span>
                 <textarea
+                  className="min-h-28 rounded-[1rem] border border-[var(--line)] bg-[var(--surface)] px-4 py-3 text-[var(--foreground)] outline-none transition focus:border-[rgba(255,127,102,0.4)] focus:ring-2 focus:ring-[rgba(255,127,102,0.16)]"
                   value={form.summary}
                   onChange={(event) => setForm((current) => ({ ...current, summary: event.target.value }))}
                   rows={3}
                 />
               </label>
-              <label className="admin-field admin-field-wide">
-                <span>Release notes</span>
+              <label className="grid gap-2 sm:col-span-2">
+                <span className="text-[0.8rem] font-extrabold uppercase tracking-[0.08em] text-[var(--muted)]">Release notes</span>
                 <textarea
+                  className="min-h-40 rounded-[1rem] border border-[var(--line)] bg-[var(--surface)] px-4 py-3 text-[var(--foreground)] outline-none transition focus:border-[rgba(255,127,102,0.4)] focus:ring-2 focus:ring-[rgba(255,127,102,0.16)]"
                   value={form.notes}
                   onChange={(event) => setForm((current) => ({ ...current, notes: event.target.value }))}
                   rows={6}
                   placeholder="One note per line"
                 />
               </label>
-              <label className="admin-checkbox">
+              <label className="flex items-center gap-3 rounded-[1rem] border border-[var(--line)] bg-[var(--surface)] px-4 py-3 sm:col-span-2">
                 <input
+                  className="h-4 w-4 accent-[#ff7f66]"
                   type="checkbox"
                   checked={form.makeCurrent}
                   onChange={(event) => setForm((current) => ({ ...current, makeCurrent: event.target.checked }))}
                 />
                 <span>Make this the current release</span>
               </label>
-              <div className="admin-form-actions">
-                <button type="submit" className="primary-button" disabled={isBusy}>
+              <div className="flex flex-wrap gap-3 pt-2 sm:col-span-2">
+                <button type="submit" className="inline-flex min-h-12 items-center justify-center rounded-full bg-[#ff7f66] px-6 py-3 font-extrabold text-white shadow-[0_12px_24px_rgba(255,127,102,0.18)] transition duration-200 hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-60" disabled={isBusy}>
                   Save release
                 </button>
-                <button type="button" className="secondary-button" onClick={() => setForm(EMPTY_FORM)} disabled={isBusy}>
+                <button type="button" className="inline-flex min-h-12 items-center justify-center rounded-full border border-[var(--secondary-border)] bg-[var(--secondary-bg)] px-6 py-3 font-extrabold text-[var(--foreground)] transition duration-200 hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-60" onClick={() => setForm(EMPTY_FORM)} disabled={isBusy}>
                   Clear
                 </button>
               </div>
             </form>
           </section>
 
-          <section className="admin-card analytics-card">
-            <h2>Published releases</h2>
-            <div className="admin-release-list">
+          <section className="rounded-[1.45rem] border border-[var(--line)] bg-[var(--surface-strong)] p-5 shadow-[0_18px_36px_rgba(79,63,37,0.08)]">
+            <h2 className="text-[1.15rem] font-semibold tracking-[-0.03em] text-[var(--foreground)]">Published releases</h2>
+            <div className="mt-4 grid gap-3">
               {siteData?.releases?.length ? (
                 siteData.releases.map((release) => {
                   const isCurrent = release.version === siteData.currentVersion;
                   return (
-                    <article key={release.version} className="admin-release-item">
-                      <div className="admin-release-head">
+                    <article key={release.version} className="rounded-[1rem] border border-[var(--line)] bg-[var(--surface)] p-4">
+                      <div className="flex flex-wrap items-start justify-between gap-3">
                         <div>
-                          <strong>{release.version}</strong>
-                          <span>{release.channel} - {release.platform}</span>
+                          <strong className="block text-[1rem] font-semibold text-[var(--foreground)]">{release.version}</strong>
+                          <span className="mt-1 block text-[0.84rem] uppercase tracking-[0.08em] text-[var(--muted)]">{release.channel} - {release.platform}</span>
                         </div>
-                        {isCurrent && <span className="admin-current-pill">Current</span>}
+                        {isCurrent && <span className="inline-flex rounded-full bg-[rgba(114,213,183,0.18)] px-3 py-1 text-[0.76rem] font-extrabold uppercase tracking-[0.08em] text-[#1d7f62]">Current</span>}
                       </div>
-                      <p>{release.summary || "No summary provided."}</p>
-                      <div className="admin-release-links">
-                        <a href={release.downloadUrl} target="_blank" rel="noreferrer">
+                      <p className="mt-3 text-[0.96rem] leading-[1.7] text-[var(--muted)]">{release.summary || "No summary provided."}</p>
+                      <div className="mt-4 flex flex-wrap gap-3">
+                        <a className="inline-flex min-h-10 items-center justify-center rounded-full border border-[var(--secondary-border)] bg-[var(--secondary-bg)] px-4 py-2 text-[0.88rem] font-extrabold text-[var(--foreground)] transition duration-200 hover:-translate-y-0.5" href={release.downloadUrl} target="_blank" rel="noreferrer">
                           Download
                         </a>
-                        <button type="button" onClick={() => setForm(toFormState(release))}>
+                        <button className="inline-flex min-h-10 items-center justify-center rounded-full border border-[var(--secondary-border)] bg-[var(--secondary-bg)] px-4 py-2 text-[0.88rem] font-extrabold text-[var(--foreground)] transition duration-200 hover:-translate-y-0.5" type="button" onClick={() => setForm(toFormState(release))}>
                           Edit
                         </button>
-                        <button type="button" onClick={() => makeCurrent(release.version)} disabled={isBusy || isCurrent}>
+                        <button className="inline-flex min-h-10 items-center justify-center rounded-full border border-[var(--secondary-border)] bg-[var(--secondary-bg)] px-4 py-2 text-[0.88rem] font-extrabold text-[var(--foreground)] transition duration-200 hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-60" type="button" onClick={() => makeCurrent(release.version)} disabled={isBusy || isCurrent}>
                           Make current
                         </button>
-                        <button type="button" onClick={() => removeRelease(release.version)} disabled={isBusy}>
+                        <button className="inline-flex min-h-10 items-center justify-center rounded-full border border-[rgba(220,38,38,0.2)] bg-[rgba(220,38,38,0.08)] px-4 py-2 text-[0.88rem] font-extrabold text-[#b42318] transition duration-200 hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-60" type="button" onClick={() => removeRelease(release.version)} disabled={isBusy}>
                           Delete
                         </button>
                       </div>
@@ -883,55 +936,57 @@ export default function AdminPanel() {
                   );
                 })
               ) : (
-                <p className="admin-empty">No releases loaded yet. Click refresh after signing in.</p>
+                <p className="rounded-[1rem] border border-[var(--line)] bg-[var(--surface)] px-4 py-3 text-sm text-[var(--muted)]">No releases loaded yet. Click refresh after signing in.</p>
               )}
             </div>
           </section>
 
-          <section className="admin-card analytics-card analytics-card-wide">
-            <h2>User timeline lookup</h2>
-            <form className="admin-form" onSubmit={loadTimeline}>
-              <label className="admin-field">
-                <span>Visitor ID</span>
+          <section className="rounded-[1.45rem] border border-[var(--line)] bg-[var(--surface-strong)] p-5 shadow-[0_18px_36px_rgba(79,63,37,0.08)] xl:col-span-2">
+            <h2 className="text-[1.15rem] font-semibold tracking-[-0.03em] text-[var(--foreground)]">User timeline lookup</h2>
+            <form className="mt-4 grid gap-4 sm:grid-cols-[1fr_1fr_auto]" onSubmit={loadTimeline}>
+              <label className="grid gap-2">
+                <span className="text-[0.8rem] font-extrabold uppercase tracking-[0.08em] text-[var(--muted)]">Visitor ID</span>
                 <input
+                  className="min-h-12 rounded-[1rem] border border-[var(--line)] bg-[var(--surface)] px-4 text-[var(--foreground)] outline-none transition focus:border-[rgba(255,127,102,0.4)] focus:ring-2 focus:ring-[rgba(255,127,102,0.16)]"
                   value={timelineForm.visitorId}
                   onChange={(event) => setTimelineForm((current) => ({ ...current, visitorId: event.target.value }))}
                   placeholder="visitor-..."
                 />
               </label>
-              <label className="admin-field">
-                <span>Session ID</span>
+              <label className="grid gap-2">
+                <span className="text-[0.8rem] font-extrabold uppercase tracking-[0.08em] text-[var(--muted)]">Session ID</span>
                 <input
+                  className="min-h-12 rounded-[1rem] border border-[var(--line)] bg-[var(--surface)] px-4 text-[var(--foreground)] outline-none transition focus:border-[rgba(255,127,102,0.4)] focus:ring-2 focus:ring-[rgba(255,127,102,0.16)]"
                   value={timelineForm.sessionId}
                   onChange={(event) => setTimelineForm((current) => ({ ...current, sessionId: event.target.value }))}
                   placeholder="session-..."
                 />
               </label>
-              <div className="admin-form-actions">
-                <button type="submit" className="primary-button" disabled={isBusy}>
+              <div className="flex items-end">
+                <button type="submit" className="inline-flex min-h-12 items-center justify-center rounded-full bg-[#ff7f66] px-6 py-3 font-extrabold text-white shadow-[0_12px_24px_rgba(255,127,102,0.18)] transition duration-200 hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-60" disabled={isBusy}>
                   Load timeline
                 </button>
               </div>
             </form>
 
-            <div className="analytics-event-list timeline-list">
+            <div className="mt-4 grid gap-3">
               {timelineEvents.length > 0 ? (
                 timelineEvents.map((event) => (
-                  <div className="analytics-event-item" key={`${event.occurredAt}-${event.eventType}-${event.sessionId || ""}`}>
-                    <strong>{event.eventType}</strong>
-                    <span>{formatDateTime(event.occurredAt)}</span>
-                    <p>
+                  <div className="rounded-[1rem] border border-[var(--line)] bg-[var(--surface)] px-4 py-3" key={`${event.occurredAt}-${event.eventType}-${event.sessionId || ""}`}>
+                    <strong className="text-[0.84rem] font-extrabold uppercase tracking-[0.08em] text-[#c7664d]">{event.eventType}</strong>
+                    <span className="mt-1 block text-[0.82rem] text-[var(--muted)]">{formatDateTime(event.occurredAt)}</span>
+                    <p className="mt-2 text-[0.96rem] leading-[1.7] text-[var(--foreground)]">
                       {event.path || event.targetId || event.label || "No label"}
                       {event.releaseVersion ? ` - ${event.releaseVersion}` : ""}
                     </p>
-                    <small>
+                    <small className="mt-2 block text-[0.82rem] text-[var(--muted)]">
                       {event.country || "Unknown"} - {event.browser || "Unknown"} - {event.os || "Unknown"}
                       {typeof event.elapsedSeconds === "number" ? ` - ${formatDuration(event.elapsedSeconds)}` : ""}
                     </small>
                   </div>
                 ))
               ) : (
-                <p className="admin-empty">Enter a visitor ID or session ID to inspect a single user timeline.</p>
+                <p className="rounded-[1rem] border border-[var(--line)] bg-[var(--surface)] px-4 py-3 text-sm text-[var(--muted)]">Enter a visitor ID or session ID to inspect a single user timeline.</p>
               )}
             </div>
           </section>

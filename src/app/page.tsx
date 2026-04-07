@@ -56,7 +56,7 @@ export default async function Home() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
       />
 
-      <main id="top" className="superpen-shell">
+      <main id="top" className="overflow-x-clip">
         <AnalyticsTracker />
         <Navbar />
         <Hero currentRelease={siteData.currentRelease} />
