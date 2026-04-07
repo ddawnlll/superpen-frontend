@@ -39,16 +39,16 @@ export async function getServiceToken(apiBaseUrl = getApiBaseUrl()): Promise<str
 
 export async function getSiteData(): Promise<SiteData> {
   try {
-    const token = await getServiceToken();
-    if (!token) {
-      return DEFAULT_SITE_DATA;
-    }
+    const apiBaseUrl = getApiBaseUrl();
+    const token = await getServiceToken(apiBaseUrl);
 
-    const response = await fetch(`${getApiBaseUrl()}/api/public/site-data`, {
+    const response = await fetch(`${apiBaseUrl}/api/public/site-data`, {
       cache: "no-store",
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
+      headers: token
+        ? {
+            Authorization: `Bearer ${token}`,
+          }
+        : undefined,
     });
 
     if (!response.ok) {
