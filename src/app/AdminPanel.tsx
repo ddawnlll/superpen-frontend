@@ -1,14 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { FormEvent, useCallback, useEffect, useState } from "react";
 import {
-  getApiBaseUrl,
   type AnalyticsExport,
-  loginWithCredentials,
   type AnalyticsOverview,
   type AnalyticsTimelineEvent,
-  type LoginResponse,
   type Release,
   type SiteData,
 } from "@/lib/superpen-api";
@@ -77,9 +75,12 @@ function toFormState(release?: Release | null): ReleaseFormState {
   };
 }
 
-function getStoredToken(): string {
-  return window.localStorage.getItem("superpen-admin-jwt") || "";
-}
+type SessionLoginResponse = {
+  user: {
+    username: string;
+  };
+  expiresInMinutes: number;
+};
 
 function formatNumber(value: number) {
   return new Intl.NumberFormat("en-US").format(value);
@@ -150,8 +151,11 @@ function BarList({
 }
 
 export default function AdminPanel() {
-  const apiBaseUrl = useMemo(() => getApiBaseUrl(), []);
-  const [authToken, setAuthToken] = useState("");
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isCheckingSession, setIsCheckingSession] = useState(true);
   const [loginForm, setLoginForm] = useState<LoginFormState>(EMPTY_LOGIN);
   const [timelineForm, setTimelineForm] = useState<TimelineFormState>(EMPTY_TIMELINE);
   const [siteData, setSiteData] = useState<SiteData | null>(null);
@@ -163,35 +167,53 @@ export default function AdminPanel() {
   const [isBusy, setIsBusy] = useState(false);
 
   useEffect(() => {
-    const token = getStoredToken();
-    if (token) {
-      setAuthToken(token);
+    let isMounted = true;
+
+    async function checkSession() {
+      try {
+        const response = await fetch("/api/admin/session", { cache: "no-store" });
+        const payload = (await response.json().catch(() => null)) as { authenticated?: boolean } | null;
+        if (!isMounted) {
+          return;
+        }
+        setIsAuthenticated(Boolean(payload?.authenticated));
+      } catch {
+        if (!isMounted) {
+          return;
+        }
+        setIsAuthenticated(false);
+      } finally {
+        if (isMounted) {
+          setIsCheckingSession(false);
+        }
+      }
     }
+
+    void checkSession();
+
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   const authenticatedFetch = useCallback(async (path: string, init?: RequestInit) => {
-    const token = authToken || getStoredToken();
-    if (!token) {
-      throw new Error("You are not logged in.");
-    }
-
-    const response = await fetch(`${apiBaseUrl}${path}`, {
+    const response = await fetch(path, {
       ...init,
-      headers: {
-        ...(init?.headers || {}),
-        Authorization: `Bearer ${token}`,
-      },
       cache: "no-store",
     });
 
     if (response.status === 401) {
-      window.localStorage.removeItem("superpen-admin-jwt");
-      setAuthToken("");
+      setIsAuthenticated(false);
+      setSiteData(null);
+      setAnalyticsOverview(null);
+      setAnalyticsExport(null);
+      setTimelineEvents([]);
+      router.replace(`/admin/login?next=${encodeURIComponent(pathname || "/admin")}`);
       throw new Error("Session expired. Please log in again.");
     }
 
     return response;
-  }, [apiBaseUrl, authToken]);
+  }, [pathname, router]);
 
   const loadDashboard = useCallback(async () => {
     setIsBusy(true);
@@ -224,26 +246,53 @@ export default function AdminPanel() {
   }, [authenticatedFetch]);
 
   useEffect(() => {
-    if (authToken) {
+    if (isAuthenticated) {
       void loadDashboard();
     }
-  }, [authToken, loadDashboard]);
+  }, [isAuthenticated, loadDashboard]);
+
+  useEffect(() => {
+    if (!isAuthenticated || pathname !== "/admin/login") {
+      return;
+    }
+
+    const nextPath = searchParams.get("next") || "/admin";
+    router.replace(nextPath);
+  }, [isAuthenticated, pathname, router, searchParams]);
 
   async function handleLogin(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setIsBusy(true);
     setMessage("Signing in...");
     try {
-      const result: LoginResponse = await loginWithCredentials(
-        loginForm.username,
-        loginForm.password,
-        apiBaseUrl,
-      );
-      setAuthToken(result.token);
-      window.localStorage.setItem("superpen-admin-jwt", result.token);
-      setMessage(`Signed in as ${result.user.username}.`);
+      const response = await fetch("/api/admin/session/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          username: loginForm.username,
+          password: loginForm.password,
+        }),
+      });
+
+      const payload = (await response.json().catch(() => null)) as
+        | SessionLoginResponse
+        | { error?: string }
+        | null;
+
+      if (!response.ok) {
+        throw new Error((payload as { error?: string } | null)?.error || "Login failed.");
+      }
+
+      setIsAuthenticated(true);
+      setMessage(`Signed in as ${(payload as SessionLoginResponse).user.username}.`);
       setLoginForm((current) => ({ ...current, password: "" }));
+
+      const nextPath = searchParams.get("next") || "/admin";
+      router.replace(nextPath);
     } catch (error) {
+      setIsAuthenticated(false);
       setMessage(error instanceof Error ? error.message : "Login failed.");
     } finally {
       setIsBusy(false);
@@ -394,17 +443,34 @@ export default function AdminPanel() {
     }
   }
 
-  function logout() {
-    window.localStorage.removeItem("superpen-admin-jwt");
-    setAuthToken("");
+  async function logout() {
+    await fetch("/api/admin/session/logout", {
+      method: "POST",
+      cache: "no-store",
+    }).catch(() => undefined);
+
+    setIsAuthenticated(false);
     setSiteData(null);
     setAnalyticsOverview(null);
     setAnalyticsExport(null);
     setTimelineEvents([]);
     setMessage("Logged out.");
+    router.replace("/admin/login");
   }
 
-  if (!authToken) {
+  if (isCheckingSession) {
+    return (
+      <main className="min-h-screen bg-[var(--background)] px-4 py-8 text-[var(--foreground)] max-[520px]:px-3 max-[520px]:py-4">
+        <section className="mx-auto flex w-full max-w-5xl flex-col gap-6 rounded-[2rem] border border-[var(--line)] bg-[var(--surface)] p-6 shadow-[var(--shadow)] backdrop-blur-[18px] max-[520px]:rounded-[1.25rem] max-[520px]:p-4">
+          <div className="rounded-[1.2rem] border border-[rgba(255,127,102,0.18)] bg-[rgba(255,127,102,0.08)] px-4 py-3 text-sm font-semibold text-[var(--foreground)]">
+            Checking admin session...
+          </div>
+        </section>
+      </main>
+    );
+  }
+
+  if (!isAuthenticated) {
     return (
       <main className="min-h-screen bg-[var(--background)] px-4 py-8 text-[var(--foreground)] max-[520px]:px-3 max-[520px]:py-4">
         <section className="mx-auto flex w-full max-w-5xl flex-col gap-6 rounded-[2rem] border border-[var(--line)] bg-[var(--surface)] p-6 shadow-[var(--shadow)] backdrop-blur-[18px] max-[520px]:rounded-[1.25rem] max-[520px]:p-4">
