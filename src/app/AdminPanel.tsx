@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { FormEvent, useCallback, useEffect, useState } from "react";
 import {
   type AnalyticsExport,
@@ -150,10 +150,9 @@ function BarList({
   );
 }
 
-export default function AdminPanel() {
+export default function AdminPanel({ loginNextPath = "/admin" }: { loginNextPath?: string }) {
   const router = useRouter();
   const pathname = usePathname();
-  const searchParams = useSearchParams();
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isCheckingSession, setIsCheckingSession] = useState(true);
   const [loginForm, setLoginForm] = useState<LoginFormState>(EMPTY_LOGIN);
@@ -256,9 +255,8 @@ export default function AdminPanel() {
       return;
     }
 
-    const nextPath = searchParams.get("next") || "/admin";
-    router.replace(nextPath);
-  }, [isAuthenticated, pathname, router, searchParams]);
+    router.replace(loginNextPath);
+  }, [isAuthenticated, loginNextPath, pathname, router]);
 
   async function handleLogin(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -289,8 +287,7 @@ export default function AdminPanel() {
       setMessage(`Signed in as ${(payload as SessionLoginResponse).user.username}.`);
       setLoginForm((current) => ({ ...current, password: "" }));
 
-      const nextPath = searchParams.get("next") || "/admin";
-      router.replace(nextPath);
+      router.replace(loginNextPath);
     } catch (error) {
       setIsAuthenticated(false);
       setMessage(error instanceof Error ? error.message : "Login failed.");
