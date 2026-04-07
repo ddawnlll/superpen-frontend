@@ -4,32 +4,15 @@ import {
   getApiBaseUrl,
   loginWithCredentials,
   type LoginResponse,
-  type Release,
   type SiteData,
 } from "@/lib/superpen-api";
 
-const DEFAULT_RELEASE: Release = {
-  version: "0.1.0-alpha",
-  channel: "alpha",
-  platform: "Windows",
-  downloadUrl: "#",
-  publishedAt: "2026-04-01T00:00:00Z",
-  summary: "Alpha early-access Windows build.",
-  notes: [
-    "Live screen annotation overlay",
-    "Tablet and pressure input support",
-    "Alpha release with active development",
-  ],
-  fileSize: "TBD",
-  checksum: "",
-};
-
 const DEFAULT_SITE_DATA: SiteData = {
   productName: "SuperPen",
-  currentVersion: DEFAULT_RELEASE.version,
-  currentRelease: DEFAULT_RELEASE,
-  releases: [DEFAULT_RELEASE],
-  generatedAt: DEFAULT_RELEASE.publishedAt,
+  currentVersion: "",
+  currentRelease: null,
+  releases: [],
+  generatedAt: new Date().toISOString(),
 };
 
 export async function getServiceLogin(
@@ -73,14 +56,14 @@ export async function getSiteData(): Promise<SiteData> {
     }
 
     const data = (await response.json()) as Partial<SiteData>;
+    const releases = Array.isArray(data.releases) ? data.releases : DEFAULT_SITE_DATA.releases;
+    const currentRelease = data.currentRelease || releases[0] || null;
+
     return {
       productName: data.productName || DEFAULT_SITE_DATA.productName,
-      currentVersion: data.currentVersion || DEFAULT_SITE_DATA.currentVersion,
-      currentRelease: data.currentRelease || DEFAULT_SITE_DATA.currentRelease,
-      releases:
-        data.releases && data.releases.length > 0
-          ? data.releases
-          : DEFAULT_SITE_DATA.releases,
+      currentVersion: data.currentVersion || currentRelease?.version || DEFAULT_SITE_DATA.currentVersion,
+      currentRelease,
+      releases,
       generatedAt: data.generatedAt || new Date().toISOString(),
     };
   } catch {

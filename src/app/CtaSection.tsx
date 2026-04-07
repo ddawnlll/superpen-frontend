@@ -41,7 +41,7 @@ export default function CtaSection({ currentRelease, releases }: CtaSectionProps
             The page now reflects the current Windows build while leaving room for
             the broader cross-platform direction of the product.
           </p>
-          {currentRelease && (
+          {currentRelease ? (
             <div className="mt-6 rounded-[1.45rem] border border-[var(--line)] bg-[var(--surface)] p-5 shadow-[0_18px_36px_rgba(79,63,37,0.08)] max-[520px]:rounded-[1.15rem] max-[520px]:p-4">
               <strong className="block text-[1.1rem] font-semibold tracking-[-0.02em] text-[var(--foreground)]">
                 {currentRelease.version}
@@ -53,19 +53,29 @@ export default function CtaSection({ currentRelease, releases }: CtaSectionProps
                 {currentRelease.summary}
               </p>
             </div>
+          ) : (
+            <div className="mt-6 rounded-[1.45rem] border border-dashed border-[var(--line)] bg-[var(--surface)] p-5 shadow-[0_18px_36px_rgba(79,63,37,0.08)] max-[520px]:rounded-[1.15rem] max-[520px]:p-4">
+              <strong className="block text-[1.1rem] font-semibold tracking-[-0.02em] text-[var(--foreground)]">
+                No public download yet
+              </strong>
+              <p className="mt-3 text-[0.98rem] leading-[1.75] text-[var(--muted)]">
+                The download section stays hidden until a real release is published from the release server.
+              </p>
+            </div>
           )}
         </div>
         <div className="flex flex-col gap-4">
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-1">
             <a
-              className="inline-flex min-h-14 items-center justify-center rounded-full bg-[#ff7f66] px-[1.4rem] py-[0.9rem] text-center font-extrabold text-white shadow-[0_12px_24px_rgba(255,127,102,0.18)] transition duration-200 hover:-translate-y-0.5 dark:shadow-[0_16px_30px_rgba(255,127,102,0.22)]"
+              className="inline-flex min-h-14 items-center justify-center rounded-full bg-[#ff7f66] px-[1.4rem] py-[0.9rem] text-center font-extrabold text-white shadow-[0_12px_24px_rgba(255,127,102,0.18)] transition duration-200 hover:-translate-y-0.5 dark:shadow-[0_16px_30px_rgba(255,127,102,0.22)] aria-disabled:pointer-events-none aria-disabled:opacity-60"
               href={buildTrackedDownloadUrl(currentRelease, "CTA download", "cta-download", "/#download")}
               data-analytics-event="click"
               data-analytics-label="CTA download"
               data-analytics-target="cta-download"
               data-analytics-release={currentRelease?.version || ""}
+              aria-disabled={!currentRelease}
             >
-              Download for Windows
+              {currentRelease ? "Download for Windows" : "Download coming soon"}
             </a>
             <a
               className="inline-flex min-h-14 items-center justify-center rounded-full border border-[var(--secondary-border)] bg-[var(--secondary-bg)] px-[1.4rem] py-[0.9rem] text-center font-extrabold text-[var(--foreground)] transition duration-200 hover:-translate-y-0.5"
@@ -78,36 +88,42 @@ export default function CtaSection({ currentRelease, releases }: CtaSectionProps
             </a>
           </div>
           <div className="grid gap-3">
-            {releases.slice(0, 4).map((release) => (
-              <article
-                key={release.version}
-                className="flex items-center justify-between gap-3 rounded-[1.2rem] border border-[var(--line)] bg-[var(--surface)] px-4 py-3 shadow-[0_12px_28px_rgba(79,63,37,0.07)] max-[520px]:items-start max-[520px]:rounded-[1rem]"
-              >
-                <div className="min-w-0">
-                  <strong className="block truncate text-[0.98rem] font-semibold text-[var(--foreground)]">
-                    {release.version}
-                  </strong>
-                  <span className="mt-1 block text-[0.84rem] text-[var(--muted)]">
-                    {formatReleaseDate(release.publishedAt)}
-                  </span>
-                </div>
-                <a
-                  className="inline-flex h-10 shrink-0 items-center justify-center rounded-full border border-[rgba(255,127,102,0.18)] bg-[var(--surface-strong)] px-4 text-[0.88rem] font-extrabold text-[#c7664d] transition duration-200 hover:-translate-y-0.5"
-                  href={buildTrackedDownloadUrl(
-                    release,
-                    `Release download ${release.version}`,
-                    `release-download-${release.version}`,
-                    "/#download",
-                  )}
-                  data-analytics-event="click"
-                  data-analytics-label={`Release download ${release.version}`}
-                  data-analytics-target={`release-download-${release.version}`}
-                  data-analytics-release={release.version}
+            {releases.length > 0 ? (
+              releases.slice(0, 4).map((release) => (
+                <article
+                  key={release.version}
+                  className="flex items-center justify-between gap-3 rounded-[1.2rem] border border-[var(--line)] bg-[var(--surface)] px-4 py-3 shadow-[0_12px_28px_rgba(79,63,37,0.07)] max-[520px]:items-start max-[520px]:rounded-[1rem]"
                 >
-                  Download
-                </a>
-              </article>
-            ))}
+                  <div className="min-w-0">
+                    <strong className="block truncate text-[0.98rem] font-semibold text-[var(--foreground)]">
+                      {release.version}
+                    </strong>
+                    <span className="mt-1 block text-[0.84rem] text-[var(--muted)]">
+                      {formatReleaseDate(release.publishedAt)}
+                    </span>
+                  </div>
+                  <a
+                    className="inline-flex h-10 shrink-0 items-center justify-center rounded-full border border-[rgba(255,127,102,0.18)] bg-[var(--surface-strong)] px-4 text-[0.88rem] font-extrabold text-[#c7664d] transition duration-200 hover:-translate-y-0.5"
+                    href={buildTrackedDownloadUrl(
+                      release,
+                      `Release download ${release.version}`,
+                      `release-download-${release.version}`,
+                      "/#download",
+                    )}
+                    data-analytics-event="click"
+                    data-analytics-label={`Release download ${release.version}`}
+                    data-analytics-target={`release-download-${release.version}`}
+                    data-analytics-release={release.version}
+                  >
+                    Download
+                  </a>
+                </article>
+              ))
+            ) : (
+              <p className="rounded-[1.2rem] border border-dashed border-[var(--line)] bg-[var(--surface)] px-4 py-3 text-[0.95rem] text-[var(--muted)] shadow-[0_12px_28px_rgba(79,63,37,0.07)]">
+                Releases will appear here after they are published from the release server.
+              </p>
+            )}
           </div>
         </div>
       </Reveal>
