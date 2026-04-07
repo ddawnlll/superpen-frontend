@@ -169,12 +169,6 @@ export default function AdminPanel() {
     }
   }, []);
 
-  useEffect(() => {
-    if (authToken) {
-      void loadDashboard();
-    }
-  }, [authToken, loadDashboard]);
-
   const authenticatedFetch = useCallback(async (path: string, init?: RequestInit) => {
     const token = authToken || getStoredToken();
     if (!token) {
@@ -228,6 +222,12 @@ export default function AdminPanel() {
       setIsBusy(false);
     }
   }, [authenticatedFetch]);
+
+  useEffect(() => {
+    if (authToken) {
+      void loadDashboard();
+    }
+  }, [authToken, loadDashboard]);
 
   async function handleLogin(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();

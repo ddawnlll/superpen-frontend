@@ -142,12 +142,17 @@ export type AnalyticsExport = {
   }>;
 };
 
+function normalizeApiBaseUrl(value: string): string {
+  return value.trim().replace(/\/+$/, "");
+}
+
 export function getApiBaseUrl(): string {
-  return (
+  const configuredUrl =
     process.env.SUPERPEN_API_BASE_URL ||
     process.env.NEXT_PUBLIC_SUPERPEN_API_BASE_URL ||
-    "http://127.0.0.1:8787"
-  );
+    "http://127.0.0.1:8787";
+
+  return normalizeApiBaseUrl(configuredUrl);
 }
 
 export async function loginWithCredentials(
