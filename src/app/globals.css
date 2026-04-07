@@ -1,5 +1,7 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
 :root {
   --background: #fffaf3;
   --surface: rgba(255, 255, 255, 0.78);
@@ -26,6 +28,7 @@
   --scroll-thumb-hover-end: rgba(184, 88, 69, 1);
   --font-display: "Georgia", "Palatino Linotype", "Book Antiqua", serif;
   --font-body: "Trebuchet MS", "Avenir Next", "Segoe UI", sans-serif;
+  color-scheme: light;
 }
 
 html[data-theme="dark"] {
@@ -48,6 +51,7 @@ html[data-theme="dark"] {
   --scroll-thumb-end: rgba(114, 213, 183, 0.7);
   --scroll-thumb-hover-start: rgba(255, 127, 102, 0.95);
   --scroll-thumb-hover-end: rgba(114, 213, 183, 0.9);
+  color-scheme: dark;
 }
 
 * {
@@ -58,15 +62,20 @@ html {
   scroll-behavior: smooth;
   scrollbar-gutter: stable;
   scrollbar-color: var(--scroll-thumb-start) var(--surface-soft);
+  background: var(--background);
 }
 
 body {
   margin: 0;
-  background: var(--background);
+  background:
+    radial-gradient(circle at top left, rgba(255, 127, 102, 0.08), transparent 32%),
+    radial-gradient(circle at top right, rgba(114, 213, 183, 0.08), transparent 28%),
+    var(--background);
   color: var(--foreground);
   font-family: var(--font-body);
   overscroll-behavior-y: none;
   overflow-x: hidden;
+  transition: background-color 180ms ease, color 180ms ease;
 }
 
 html::-webkit-scrollbar {

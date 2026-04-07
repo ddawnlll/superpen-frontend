@@ -37,10 +37,17 @@ export const metadata: Metadata = {
 
 const themeScript = `
   try {
-    var saved = localStorage.getItem("superpen-theme");
-    var prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-    var theme = saved || (prefersDark ? "dark" : "light");
-    document.documentElement.dataset.theme = theme;
+    var storageKey = "superpen-theme";
+    var media = window.matchMedia("(prefers-color-scheme: dark)");
+    var root = document.documentElement;
+    var saved = localStorage.getItem(storageKey);
+    var preference = saved === "light" || saved === "dark" || saved === "system" ? saved : "system";
+    var resolved = preference === "system" ? (media.matches ? "dark" : "light") : preference;
+
+    root.dataset.themePreference = preference;
+    root.dataset.theme = resolved;
+    root.classList.toggle("dark", resolved === "dark");
+    root.style.colorScheme = resolved;
   } catch (e) {}
 `;
 

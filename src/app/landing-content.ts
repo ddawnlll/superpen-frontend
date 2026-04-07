@@ -165,7 +165,7 @@ export const softwareStructuredData = {
   operatingSystem: "Windows",
   description:
     "A Qt-based desktop overlay in alpha early access for drawing, highlighting, adding text, placing shapes, and capturing screenshots on top of any screen.",
-  softwareVersion: "0.1.0-alpha",
+  softwareVersion: "0.1.2-alpha",
   offers: {
     "@type": "Offer",
     price: "0",
