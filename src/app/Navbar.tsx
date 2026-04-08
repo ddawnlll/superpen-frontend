@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useSyncExternalStore } from "react";
+import { useCallback, useEffect, useMemo, useRef, useSyncExternalStore } from "react";
 import { i18nConfig } from "@/lib/i18n";
 import { useLandingContent, useLocale } from "./LocaleProvider";
 
@@ -77,11 +77,37 @@ function setThemePreference(preference: ThemePreference) {
 export default function Navbar() {
   const { locale, setLocale } = useLocale();
   const content = useLandingContent();
+  const wrapperRef = useRef<HTMLDivElement | null>(null);
   const { preference, resolvedTheme } = useSyncExternalStore(
     subscribeToTheme,
     getClientThemeSnapshot,
     getServerThemeSnapshot,
   );
+
+  const scrollToHash = useCallback((hash: string, behavior: ScrollBehavior = "smooth") => {
+    if (typeof window === "undefined") {
+      return;
+    }
+
+    const id = hash.replace(/^#/, "");
+    if (!id) {
+      return;
+    }
+
+    const target = document.getElementById(id);
+    if (!target) {
+      return;
+    }
+
+    const navbarHeight = wrapperRef.current?.getBoundingClientRect().height ?? 0;
+    const wrapperTop = wrapperRef.current?.getBoundingClientRect().top ?? 0;
+    const stickyOffset = Math.max(wrapperTop, 0);
+    const sectionPadding = window.innerWidth < 520 ? 14 : 20;
+    const extraOffset = navbarHeight + stickyOffset + sectionPadding;
+    const targetTop = window.scrollY + target.getBoundingClientRect().top - extraOffset;
+
+    window.scrollTo({ top: Math.max(0, targetTop), behavior });
+  }, []);
 
   useEffect(() => {
     const media = window.matchMedia("(prefers-color-scheme: dark)");
@@ -103,6 +129,28 @@ export default function Navbar() {
     return () => media.removeEventListener("change", handleChange);
   }, [preference]);
 
+  useEffect(() => {
+    if (!window.location.hash) {
+      return;
+    }
+
+    const frame = window.requestAnimationFrame(() => {
+      scrollToHash(window.location.hash, "auto");
+    });
+
+    return () => window.cancelAnimationFrame(frame);
+  }, [scrollToHash]);
+
+  const handleNavClick = useCallback(
+    (event: React.MouseEvent<HTMLAnchorElement>, hash: string) => {
+      const href = hash.startsWith("#") ? hash : `#${hash}`;
+      event.preventDefault();
+      window.history.pushState(null, "", href);
+      scrollToHash(href);
+    },
+    [scrollToHash],
+  );
+
   const cycleTheme = () => {
     const nextPreference = THEME_ORDER[(THEME_ORDER.indexOf(preference) + 1) % THEME_ORDER.length];
     setThemePreference(nextPreference);
@@ -118,12 +166,16 @@ export default function Navbar() {
   }, [content.navbar.theme.auto, content.navbar.theme.dark, content.navbar.theme.light, preference, resolvedTheme]);
 
   return (
-    <div className="sticky top-3 z-40 mx-auto w-[min(1180px,calc(100%-2rem))] pt-3 max-[820px]:w-[min(100%-1.25rem,1180px)] max-[520px]:top-[0.45rem] max-[520px]:w-[min(100%-1rem,1180px)] max-[520px]:pt-[0.45rem]">
+    <div ref={wrapperRef} className="sticky top-3 z-40 mx-auto w-[min(1180px,calc(100%-2rem))] pt-3 max-[820px]:w-[min(100%-1.25rem,1180px)] max-[520px]:top-[0.45rem] max-[520px]:w-[min(100%-1rem,1180px)] max-[520px]:pt-[0.45rem]">
       <nav
         className="grid min-h-[4.25rem] grid-cols-[auto_1fr_auto] items-center gap-4 rounded-full border border-[var(--line)] bg-[var(--surface-soft)] px-[0.95rem] py-[0.7rem] shadow-[var(--shadow)] backdrop-blur-[20px] max-[820px]:grid-cols-[1fr_auto] max-[520px]:min-h-[3.8rem] max-[520px]:px-[0.7rem] max-[520px]:py-[0.55rem]"
         aria-label={content.navbar.ariaLabel}
       >
-        <a className="inline-flex items-center gap-3 font-black tracking-[0.02em] max-[520px]:gap-[0.55rem] max-[520px]:text-[0.95rem]" href="#top">
+        <a
+          className="inline-flex items-center gap-3 font-black tracking-[0.02em] max-[520px]:gap-[0.55rem] max-[520px]:text-[0.95rem]"
+          href="#top"
+          onClick={(event) => handleNavClick(event, "#top")}
+        >
           <span className="grid h-9 w-9 place-items-center rounded-full bg-linear-to-br from-[#ff7f66] to-[#ffb38a] text-white shadow-[0_12px_24px_rgba(255,127,102,0.24)] max-[520px]:h-8 max-[520px]:w-8">
             S
           </span>
@@ -131,10 +183,10 @@ export default function Navbar() {
         </a>
 
         <div className="flex flex-wrap justify-center gap-4 max-[820px]:hidden">
-          <a className="font-extrabold text-[var(--muted)] transition-colors duration-200 hover:text-[var(--foreground)]" href="#features-title">{content.navbar.nav.features}</a>
-          <a className="font-extrabold text-[var(--muted)] transition-colors duration-200 hover:text-[var(--foreground)]" href="#workflow-title">{content.navbar.nav.workflow}</a>
-          <a className="font-extrabold text-[var(--muted)] transition-colors duration-200 hover:text-[var(--foreground)]" href="#faq-title">{content.navbar.nav.faq}</a>
-          <a className="font-extrabold text-[var(--muted)] transition-colors duration-200 hover:text-[var(--foreground)]" href="#download">{content.navbar.nav.download}</a>
+          <a className="font-extrabold text-[var(--muted)] transition-colors duration-200 hover:text-[var(--foreground)]" href="#features-title" onClick={(event) => handleNavClick(event, "#features-title")}>{content.navbar.nav.features}</a>
+          <a className="font-extrabold text-[var(--muted)] transition-colors duration-200 hover:text-[var(--foreground)]" href="#workflow-title" onClick={(event) => handleNavClick(event, "#workflow-title")}>{content.navbar.nav.workflow}</a>
+          <a className="font-extrabold text-[var(--muted)] transition-colors duration-200 hover:text-[var(--foreground)]" href="#faq-title" onClick={(event) => handleNavClick(event, "#faq-title")}>{content.navbar.nav.faq}</a>
+          <a className="font-extrabold text-[var(--muted)] transition-colors duration-200 hover:text-[var(--foreground)]" href="#download" onClick={(event) => handleNavClick(event, "#download")}>{content.navbar.nav.download}</a>
         </div>
 
         <div className="flex items-center gap-2 justify-self-end max-[520px]:gap-1.5">

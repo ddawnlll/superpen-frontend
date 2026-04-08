@@ -56,8 +56,10 @@ From `package.json`:
 ## 4) Current quality / status checks
 
 - `npm run lint` passes
+- `npx tsc --noEmit` passes
 - No test framework is configured
 - Public landing page now supports English and Turkish localization with locale persistence, browser/request detection, and a navbar language switcher
+- Recent landing-page UI work added a race-style comparison section, accent-driven audience cards, and custom navbar hash scrolling offsets for sticky-header-safe in-page navigation
 - No `TODO`, `FIXME`, `HACK`, or `XXX` markers were found outside generated/vendor dirs
 
 ## 5) Important repository rules
@@ -526,6 +528,8 @@ Defined in `src/app/landing-content.ts`.
 - Includes an `EN` / `TR` language switcher in the navbar
 - Explicit locale changes persist to both `localStorage['superpen-locale']` and cookie `superpen-locale`
 - Links to in-page anchors: features, workflow, FAQ, download
+- Uses custom hash scrolling instead of raw anchor jumps so sticky-navbar height/top spacing are accounted for
+- Repositions direct hash loads on mount so deep links land below the sticky navbar instead of underneath it
 
 ### `Hero.tsx`
 - Client component
@@ -544,6 +548,8 @@ Defined in `src/app/landing-content.ts`.
 ### Content sections
 - Mostly presentational, driven by `landing-content.ts`
 - Styled as soft glassmorphism / cards with coral/mint palette
+- `ComparisonSection.tsx` is no longer a simple table/card hybrid; it is now a race-metaphor comparison panel with sticky headers, per-row reveal timing, animated score bars, a pulsing Superpen finish dot, and a vertical scroll rail
+- `AudienceSection.tsx` now uses accent-cycled audience cards with emoji icons, explicit animated bullet markers, and an optional featured middle card when exactly 3 audience cards are present
 
 ### `CtaSection.tsx`
 - Shows current release summary if present
@@ -909,9 +915,9 @@ Desired coding style:
 - `Navbar.tsx` — header + theme switcher + language switcher
 - `Hero.tsx` — animated hero and interactive product demo with locale-aware copy
 - `FeaturesSection.tsx` — feature cards
-- `ComparisonSection.tsx` — animated Epic Pen comparison
+- `ComparisonSection.tsx` — race-style Epic Pen comparison with sticky headers, per-row animated bars, and scroll-driven side rail
 - `WorkflowSection.tsx` — workflow steps
-- `AudienceSection.tsx` — audience cards
+- `AudienceSection.tsx` — accent-cycled audience cards with featured-center-card behavior for 3-card layouts
 - `CapabilitiesSection.tsx` — capability quotes/cards
 - `FaqSection.tsx` — FAQ cards
 - `CtaSection.tsx` — release CTA and release list
