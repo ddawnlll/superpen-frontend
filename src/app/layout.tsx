@@ -1,4 +1,7 @@
 import type { Metadata } from "next";
+import { cookies, headers } from "next/headers";
+import LocaleProvider from "./LocaleProvider";
+import { i18nConfig, parseAcceptLanguage, resolveLocale } from "@/lib/i18n";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -51,16 +54,23 @@ const themeScript = `
   } catch (e) {}
 `;
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const cookieStore = await cookies();
+  const headerStore = await headers();
+  const initialLocale = resolveLocale({
+    savedLocale: cookieStore.get(i18nConfig.cookieName)?.value,
+    browserLocale: parseAcceptLanguage(headerStore.get("accept-language")),
+  });
+
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang={initialLocale} data-locale={initialLocale} suppressHydrationWarning>
       <body>
-        <script dangerouslySetInnerHTML={{ __html: themeScript }} />
-        {children}
+        <script id="superpen-theme-init" dangerouslySetInnerHTML={{ __html: themeScript }} />
+        <LocaleProvider initialLocale={initialLocale}>{children}</LocaleProvider>
       </body>
     </html>
   );

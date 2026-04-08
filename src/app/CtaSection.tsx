@@ -1,18 +1,22 @@
+"use client";
+
 import type { Release } from "@/lib/superpen-api";
+import { getIntlLocale } from "@/lib/i18n";
 import { buildTrackedDownloadUrl } from "@/lib/download-tracking";
 import Reveal from "./Reveal";
+import { useLandingContent, useLocale } from "./LocaleProvider";
 
 type CtaSectionProps = {
   currentRelease: Release | null;
   releases: Release[];
 };
 
-function formatReleaseDate(value: string) {
+function formatReleaseDate(value: string, locale: "en" | "tr") {
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) {
     return value;
   }
-  return date.toLocaleDateString("en-US", {
+  return date.toLocaleDateString(getIntlLocale(locale), {
     year: "numeric",
     month: "short",
     day: "numeric",
@@ -20,6 +24,8 @@ function formatReleaseDate(value: string) {
 }
 
 export default function CtaSection({ currentRelease, releases }: CtaSectionProps) {
+  const { locale } = useLocale();
+  const content = useLandingContent();
   return (
     <section
       id="download"
@@ -29,17 +35,16 @@ export default function CtaSection({ currentRelease, releases }: CtaSectionProps
       <Reveal className="grid gap-6 rounded-[2rem] border border-[var(--line)] bg-[linear-gradient(135deg,rgba(255,255,255,0.92),rgba(247,241,232,0.98))] p-[clamp(1.35rem,3vw,2.5rem)] shadow-[var(--shadow)] dark:bg-[linear-gradient(135deg,rgba(20,26,26,0.96),rgba(14,20,19,0.98))] lg:grid-cols-[minmax(0,1fr)_minmax(20rem,24rem)] max-[700px]:rounded-[1.5rem] max-[520px]:rounded-[1.2rem] max-[520px]:p-4">
         <div>
           <span className="inline-flex items-center rounded-full border border-[rgba(255,127,102,0.18)] bg-[var(--surface-strong)] px-3 py-[0.55rem] text-[0.76rem] font-extrabold uppercase tracking-[0.12em] text-[#c7664d] shadow-[0_10px_24px_rgba(210,124,102,0.08)]">
-            Current build
+            {content.ctaSection.badge}
           </span>
           <h2
             id="cta-title"
             className="mt-4 max-w-[14ch] text-balance font-[Georgia,Palatino_Linotype,Book_Antiqua,serif] text-[clamp(2.2rem,5vw,3.5rem)] leading-[1.02] tracking-[-0.04em] text-[var(--foreground)] max-[700px]:max-w-none"
           >
-            Superpen is a Qt-based alpha early-access overlay for drawing and explaining on screen.
+            {content.ctaSection.title}
           </h2>
           <p className="mt-4 max-w-[40rem] text-[1.02rem] leading-[1.8] text-[var(--muted)] max-[520px]:text-[0.96rem]">
-            The page now reflects the current Windows build while leaving room for
-            the broader cross-platform direction of the product.
+            {content.ctaSection.description}
           </p>
           {currentRelease ? (
             <div className="mt-6 rounded-[1.45rem] border border-[var(--line)] bg-[var(--surface)] p-5 shadow-[0_18px_36px_rgba(79,63,37,0.08)] max-[520px]:rounded-[1.15rem] max-[520px]:p-4">
@@ -56,10 +61,10 @@ export default function CtaSection({ currentRelease, releases }: CtaSectionProps
           ) : (
             <div className="mt-6 rounded-[1.45rem] border border-dashed border-[var(--line)] bg-[var(--surface)] p-5 shadow-[0_18px_36px_rgba(79,63,37,0.08)] max-[520px]:rounded-[1.15rem] max-[520px]:p-4">
               <strong className="block text-[1.1rem] font-semibold tracking-[-0.02em] text-[var(--foreground)]">
-                No public download yet
+                {content.ctaSection.noReleaseTitle}
               </strong>
               <p className="mt-3 text-[0.98rem] leading-[1.75] text-[var(--muted)]">
-                The download section stays hidden until a real release is published from the release server.
+                {content.ctaSection.noReleaseDescription}
               </p>
             </div>
           )}
@@ -75,7 +80,7 @@ export default function CtaSection({ currentRelease, releases }: CtaSectionProps
               data-analytics-release={currentRelease?.version || ""}
               aria-disabled={!currentRelease}
             >
-              {currentRelease ? "Download for Windows" : "Download coming soon"}
+              {currentRelease ? content.ctaSection.primaryCtaReady : content.ctaSection.primaryCtaPending}
             </a>
             <a
               className="inline-flex min-h-14 items-center justify-center rounded-full border border-[var(--secondary-border)] bg-[var(--secondary-bg)] px-[1.4rem] py-[0.9rem] text-center font-extrabold text-[var(--foreground)] transition duration-200 hover:-translate-y-0.5"
@@ -84,7 +89,7 @@ export default function CtaSection({ currentRelease, releases }: CtaSectionProps
               data-analytics-label="CTA preview"
               data-analytics-target="cta-preview"
             >
-              View the preview
+              {content.ctaSection.secondaryCta}
             </a>
           </div>
           <div className="grid gap-3">
@@ -99,7 +104,7 @@ export default function CtaSection({ currentRelease, releases }: CtaSectionProps
                       {release.version}
                     </strong>
                     <span className="mt-1 block text-[0.84rem] text-[var(--muted)]">
-                      {formatReleaseDate(release.publishedAt)}
+                      {formatReleaseDate(release.publishedAt, locale)}
                     </span>
                   </div>
                   <a
@@ -115,13 +120,13 @@ export default function CtaSection({ currentRelease, releases }: CtaSectionProps
                     data-analytics-target={`release-download-${release.version}`}
                     data-analytics-release={release.version}
                   >
-                    Download
+                    {content.ctaSection.releaseDownload}
                   </a>
                 </article>
               ))
             ) : (
               <p className="rounded-[1.2rem] border border-dashed border-[var(--line)] bg-[var(--surface)] px-4 py-3 text-[0.95rem] text-[var(--muted)] shadow-[0_12px_28px_rgba(79,63,37,0.07)]">
-                Releases will appear here after they are published from the release server.
+                {content.ctaSection.releasesEmpty}
               </p>
             )}
           </div>

@@ -1,11 +1,11 @@
+"use client";
+
 import Reveal from "./Reveal";
-import type { Feature } from "./landing-content";
+import { useLandingContent } from "./LocaleProvider";
 
-type FeaturesSectionProps = {
-  features: Feature[];
-};
-
-export default function FeaturesSection({ features }: FeaturesSectionProps) {
+export default function FeaturesSection() {
+  const content = useLandingContent();
+  const features = content.featuresSection.items;
   return (
     <section
       className="mx-auto my-0 w-[min(1180px,calc(100%-2rem))] rounded-[2rem] border border-[var(--line)] bg-[var(--surface-soft)] px-[clamp(1.25rem,3vw,2.5rem)] py-[clamp(3.5rem,7vw,5.5rem)] shadow-[var(--shadow)] max-[820px]:w-[min(100%-1.25rem,1180px)] max-[700px]:rounded-[1.5rem] max-[700px]:py-[3rem] max-[520px]:w-[min(100%-1rem,1180px)] max-[520px]:rounded-[1.25rem] max-[520px]:px-4 max-[520px]:py-[2.35rem]"
@@ -13,19 +13,16 @@ export default function FeaturesSection({ features }: FeaturesSectionProps) {
     >
       <Reveal className="mx-auto max-w-[44rem] text-center max-[700px]:text-left">
         <span className="inline-flex items-center rounded-full border border-[rgba(255,127,102,0.2)] bg-[var(--surface-strong)] px-3 py-[0.55rem] text-[0.76rem] font-extrabold uppercase tracking-[0.12em] text-[#c7664d] shadow-[0_10px_24px_rgba(210,124,102,0.08)]">
-          What Superpen actually is
+          {content.featuresSection.badge}
         </span>
         <h2
           id="features-title"
           className="mt-4 text-balance font-[Georgia,Palatino_Linotype,Book_Antiqua,serif] text-[clamp(2.2rem,5vw,3.5rem)] leading-[1.02] tracking-[-0.035em] text-[var(--foreground)]"
         >
-          A lightweight overlay for live annotation on top of your desktop.
+          {content.featuresSection.title}
         </h2>
         <p className="mt-4 text-[1.02rem] leading-[1.8] text-[var(--muted)] max-[520px]:text-[0.96rem]">
-          Superpen is built with Qt and currently ships as an alpha early-access
-          desktop app. The product is closer to a fast on-screen markup layer
-          than a full whiteboard suite, which is exactly what makes it useful
-          during live work.
+          {content.featuresSection.description}
         </p>
       </Reveal>
 

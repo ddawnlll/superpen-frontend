@@ -9,15 +9,7 @@ import {
   useTransform,
 } from "framer-motion";
 import type { ComparisonRow } from "./landing-content";
-
-const BADGES = [
-  { label: "No subscription", icon: "*" },
-  { label: "48 math shapes", icon: "48" },
-  { label: "Saved custom shapes", icon: "<>" },
-  { label: "Custom colors", icon: "o" },
-  { label: "Board mode", icon: "#" },
-  { label: "Editable shortcuts", icon: "K" },
-];
+import { useLandingContent } from "./LocaleProvider";
 
 type AnimatedBadgeProps = {
   label: string;
@@ -62,9 +54,10 @@ function AnimatedBadge({ label, icon, index }: AnimatedBadgeProps) {
 type ComparisonRowItemProps = {
   row: ComparisonRow;
   index: number;
+  superpenLeadsLabel: string;
 };
 
-function ComparisonRowItem({ row, index }: ComparisonRowItemProps) {
+function ComparisonRowItem({ row, index, superpenLeadsLabel }: ComparisonRowItemProps) {
   const ref = useRef<HTMLDivElement | null>(null);
   const inView = useInView(ref, { once: true, margin: "-60px 0px -60px 0px" });
   const prefersReducedMotion = useReducedMotion();
@@ -134,7 +127,7 @@ function ComparisonRowItem({ row, index }: ComparisonRowItemProps) {
               damping: 26,
             }}
           >
-            Superpen leads
+            {superpenLeadsLabel}
           </motion.span>
         ) : null}
         <p className="relative z-[1] text-[0.97rem] leading-[1.7] text-[var(--foreground)]">{row.superpen}</p>
@@ -175,11 +168,9 @@ function ComparisonRowItem({ row, index }: ComparisonRowItemProps) {
   );
 }
 
-type ComparisonSectionProps = {
-  comparisonRows: ComparisonRow[];
-};
-
-export default function ComparisonSection({ comparisonRows }: ComparisonSectionProps) {
+export default function ComparisonSection() {
+  const content = useLandingContent();
+  const comparisonRows = content.comparisonSection.rows;
   const tableRef = useRef<HTMLDivElement | null>(null);
   const prefersReducedMotion = useReducedMotion();
   const { scrollYProgress } = useScroll({
@@ -201,18 +192,16 @@ export default function ComparisonSection({ comparisonRows }: ComparisonSectionP
         transition={{ duration: 0.55, ease: "easeOut" }}
       >
         <span className="inline-flex items-center rounded-full border border-[rgba(255,127,102,0.18)] bg-[var(--surface-strong)] px-3 py-[0.55rem] text-[0.76rem] font-extrabold uppercase tracking-[0.12em] text-[#c7664d] shadow-[0_10px_24px_rgba(210,124,102,0.08)]">
-          Superpen vs Epic Pen
+          {content.comparisonSection.badge}
         </span>
         <h2
           id="comparison-title"
           className="mt-4 text-balance font-[Georgia,Palatino_Linotype,Book_Antiqua,serif] text-[clamp(2.2rem,5vw,3.35rem)] leading-[1.04] tracking-[-0.035em] text-[var(--foreground)]"
         >
-          The comparison gets interesting when you look past basic screen ink.
+          {content.comparisonSection.title}
         </h2>
         <p className="mt-4 text-[1.02rem] leading-[1.8] text-[var(--muted)] max-[520px]:text-[0.96rem]">
-          Epic Pen is established and polished, but Superpen already pulls ahead in
-          the areas that matter most for math-heavy explanation and deeper
-          customization.
+          {content.comparisonSection.description}
         </p>
       </motion.div>
 
@@ -225,20 +214,18 @@ export default function ComparisonSection({ comparisonRows }: ComparisonSectionP
       >
         <div>
           <span className="inline-flex items-center rounded-full bg-[rgba(114,213,183,0.18)] px-3 py-[0.5rem] text-[0.76rem] font-extrabold uppercase tracking-[0.1em] text-[#1d7f62]">
-            Why Superpen stands out
+            {content.comparisonSection.highlightBadge}
           </span>
           <h3 className="mt-4 text-balance text-[clamp(1.55rem,3vw,2.25rem)] font-semibold tracking-[-0.03em] text-[var(--foreground)]">
-            More built in, less paywall, and far more math-first tooling.
+            {content.comparisonSection.highlightTitle}
           </h3>
           <p className="mt-4 text-[0.99rem] leading-[1.78] text-[var(--muted)]">
-            The strongest current advantages are straightforward: no subscription,
-            48 built-in math shapes, reusable custom-shape creation, and a more
-            ambitious annotation workflow than the usual pen-plus-highlighter setup.
+            {content.comparisonSection.highlightDescription}
           </p>
         </div>
 
-        <div className="flex flex-wrap gap-3" aria-label="Superpen advantages">
-          {BADGES.map((badge, index) => (
+        <div className="flex flex-wrap gap-3" aria-label={content.comparisonSection.highlightBadge}>
+          {content.comparisonSection.badges.map((badge, index) => (
             <AnimatedBadge key={badge.label} {...badge} index={index} />
           ))}
         </div>
@@ -255,7 +242,7 @@ export default function ComparisonSection({ comparisonRows }: ComparisonSectionP
           />
         </div>
 
-        <div className="mt-4 grid gap-3" role="table" aria-label="Superpen compared with Epic Pen">
+        <div className="mt-4 grid gap-3" role="table" aria-label={content.comparisonSection.tableAriaLabel}>
           <div
             className="hidden grid-cols-[minmax(0,0.8fr)_minmax(0,1fr)_minmax(0,1fr)] gap-px overflow-hidden rounded-[1.2rem] border border-[var(--line)] bg-[var(--line)] md:grid"
             role="row"
@@ -264,24 +251,24 @@ export default function ComparisonSection({ comparisonRows }: ComparisonSectionP
               className="bg-[var(--surface-strong)] px-5 py-4 text-[0.82rem] font-extrabold uppercase tracking-[0.08em] text-[var(--muted)]"
               role="columnheader"
             >
-              Category
+              {content.comparisonSection.headers.category}
             </span>
             <span
               className="bg-[rgba(114,213,183,0.14)] px-5 py-4 text-[0.82rem] font-extrabold uppercase tracking-[0.08em] text-[#1d7f62]"
               role="columnheader"
             >
-              Superpen
+              {content.comparisonSection.headers.superpen}
             </span>
             <span
               className="bg-[var(--surface-strong)] px-5 py-4 text-[0.82rem] font-extrabold uppercase tracking-[0.08em] text-[var(--muted)]"
               role="columnheader"
             >
-              Epic Pen
+              {content.comparisonSection.headers.epicPen}
             </span>
           </div>
 
           {comparisonRows.map((row, index) => (
-            <ComparisonRowItem key={row.label} row={row} index={index} />
+            <ComparisonRowItem key={row.label} row={row} index={index} superpenLeadsLabel={content.comparisonSection.superpenLeads} />
           ))}
         </div>
       </div>
@@ -293,8 +280,7 @@ export default function ComparisonSection({ comparisonRows }: ComparisonSectionP
         viewport={{ once: true, amount: 0.6 }}
         transition={{ duration: 0.45, ease: "easeOut" }}
       >
-        Comparison reflects the current Superpen repository and Epic Pen’s
-        public features, user-guide, and pricing pages.
+        {content.comparisonSection.footer}
       </motion.p>
     </section>
   );

@@ -1,11 +1,11 @@
+"use client";
+
 import Reveal from "./Reveal";
-import type { Capability } from "./landing-content";
+import { useLandingContent } from "./LocaleProvider";
 
-type CapabilitiesSectionProps = {
-  capabilities: Capability[];
-};
-
-export default function CapabilitiesSection({ capabilities }: CapabilitiesSectionProps) {
+export default function CapabilitiesSection() {
+  const content = useLandingContent();
+  const capabilities = content.capabilitiesSection.capabilities;
   return (
     <section
       className="mx-auto my-0 w-[min(1180px,calc(100%-2rem))] px-[clamp(0rem,1vw,0.25rem)] py-[clamp(3.75rem,7vw,5.75rem)] max-[820px]:w-[min(100%-1.25rem,1180px)] max-[520px]:w-[min(100%-1rem,1180px)] max-[520px]:py-[2.8rem]"
@@ -13,16 +13,16 @@ export default function CapabilitiesSection({ capabilities }: CapabilitiesSectio
     >
       <Reveal className="mx-auto max-w-[42rem] text-center max-[700px]:text-left">
         <span className="inline-flex items-center rounded-full border border-[rgba(255,127,102,0.18)] bg-[var(--surface-strong)] px-3 py-[0.55rem] text-[0.76rem] font-extrabold uppercase tracking-[0.12em] text-[#c7664d] shadow-[0_10px_24px_rgba(210,124,102,0.08)]">
-          Core capabilities
+          {content.capabilitiesSection.badge}
         </span>
         <h2
           id="capabilities-title"
           className="mt-4 text-balance font-[Georgia,Palatino_Linotype,Book_Antiqua,serif] text-[clamp(2.2rem,5vw,3.35rem)] leading-[1.04] tracking-[-0.035em] text-[var(--foreground)]"
         >
-          The app already includes more than basic pen input.
+          {content.capabilitiesSection.title}
         </h2>
         <p className="mt-4 text-[1.02rem] leading-[1.8] text-[var(--muted)] max-[520px]:text-[0.96rem]">
-          These are implemented parts of the product, not placeholder ideas for later.
+          {content.capabilitiesSection.description}
         </p>
       </Reveal>
 

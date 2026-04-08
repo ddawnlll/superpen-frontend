@@ -4,43 +4,7 @@ import { motion } from "framer-motion";
 import { useState } from "react";
 import type { Release } from "@/lib/superpen-api";
 import { buildTrackedDownloadUrl } from "@/lib/download-tracking";
-
-const demoModes = [
-  {
-    id: "annotate",
-    label: "Annotate",
-    badge: "Pen overlay",
-    note: "The toolbar floats above your desktop while the canvas stays transparent over the content underneath.",
-    badgeClass: "bg-[rgba(255,207,191,0.6)] text-[#ba5747]",
-    noteAccentClass: "text-[#ba5747]",
-    activeTool: "Pen",
-    status: "Click-through outside toolbar",
-  },
-  {
-    id: "screenshot",
-    label: "Screenshot",
-    badge: "Capture flow",
-    note: "Drag a region, then copy it to the clipboard or save it to your computer from the inline action bar.",
-    badgeClass: "bg-[rgba(114,213,183,0.28)] text-[#1d7f62]",
-    noteAccentClass: "text-[#1d7f62]",
-    activeTool: "Shot",
-    status: "Selection ready",
-  },
-  {
-    id: "board",
-    label: "Board",
-    badge: "Board mode",
-    note: "Board mode gives you a focused background for live explanation while keeping the same tools close by.",
-    badgeClass: "bg-[rgba(246,196,83,0.26)] text-[#9f6c09]",
-    noteAccentClass: "text-[#9f6c09]",
-    activeTool: "Board",
-    status: "Black board active",
-  },
-] as const;
-
-type DemoMode = (typeof demoModes)[number];
-
-const toolbarButtons = ["Cursor", "Pen", "Erase", "Select", "Shot", "Shape", "Board"] as const;
+import { useLandingContent } from "./LocaleProvider";
 
 const fadeUp = {
   initial: { opacity: 0, y: 28 },
@@ -54,7 +18,10 @@ type HeroProps = {
 };
 
 export default function Hero({ currentRelease }: HeroProps) {
-  const [activeMode, setActiveMode] = useState<DemoMode>(demoModes[0]);
+  const content = useLandingContent();
+  const demoModes = content.hero.modes;
+  const toolbarButtons = content.hero.toolbarButtons;
+  const [activeMode, setActiveMode] = useState<(typeof demoModes)[number]>(demoModes[0]);
 
   return (
     <section className="relative mx-auto grid min-h-screen w-[min(1180px,calc(100%-2rem))] items-center overflow-x-clip py-8 max-[820px]:w-[min(100%-1.25rem,1180px)] max-[700px]:min-h-0 max-[700px]:w-[min(100%-1rem,1180px)] max-[700px]:pt-4 max-[520px]:pt-3">
@@ -67,23 +34,21 @@ export default function Hero({ currentRelease }: HeroProps) {
       <div className="relative z-10 grid min-h-[calc(100vh-2rem)] grid-cols-[1.02fr_0.98fr] items-center gap-[clamp(1.5rem,3vw,2.5rem)] max-[980px]:min-h-0 max-[980px]:grid-cols-1 max-[980px]:pt-12">
         <motion.div className="min-w-0" {...fadeUp}>
           <span className="inline-flex items-center gap-[0.45rem] rounded-full border border-[rgba(255,127,102,0.22)] bg-[var(--surface-strong)] px-4 py-[0.7rem] font-extrabold tracking-[0.02em] text-[#b95845] shadow-[0_10px_30px_rgba(210,124,102,0.12)] max-[520px]:text-[0.76rem]">
-            Screen annotation overlay
+            {content.hero.badge}
           </span>
           <h1 className="mt-5 max-w-[10ch] text-balance font-[Georgia,Palatino_Linotype,Book_Antiqua,serif] text-[clamp(3.6rem,8vw,6.6rem)] leading-[0.98] tracking-[-0.04em] max-[980px]:max-w-[12ch] max-[700px]:text-[clamp(3rem,15vw,4.4rem)] max-[520px]:max-w-[11ch] max-[520px]:text-[clamp(2.45rem,14vw,3.35rem)]">
-            Superpen lets you
-            <span className="text-[var(--coral)] italic"> draw over anything on screen.</span>
+            {content.hero.titleLead}
+            <span className="text-[var(--coral)] italic"> {content.hero.titleAccent}</span>
           </h1>
           <p className="mt-4 text-[0.92rem] font-extrabold uppercase tracking-[0.08em] text-[#c7664d]">
-            Qt-based. Alpha early access.
+            {content.hero.kicker}
           </p>
           <p className="mt-6 max-w-[34rem] text-pretty text-[1.12rem] leading-[1.7] text-[var(--muted)] max-[700px]:text-base max-[520px]:mt-4">
-            A desktop overlay for pen input, highlighting, text, shapes,
-            screenshots, and fast live explanation, with the product heading
-            toward a broader cross-platform release.
+            {content.hero.description}
           </p>
           {currentRelease && (
             <p className="mt-4 font-extrabold text-[var(--foreground)]">
-              Current release: <strong>{currentRelease.version}</strong> for {currentRelease.platform}
+              {content.hero.currentReleaseLabel} <strong>{currentRelease.version}</strong> {content.hero.currentReleaseConnector} {currentRelease.platform}
             </p>
           )}
 
@@ -97,7 +62,7 @@ export default function Hero({ currentRelease }: HeroProps) {
               data-analytics-release={currentRelease?.version || ""}
               aria-disabled={!currentRelease}
             >
-              {currentRelease ? "Try Superpen free" : "Download coming soon"}
+              {currentRelease ? content.hero.primaryCtaReady : content.hero.primaryCtaPending}
             </a>
             <a
               className="inline-flex min-h-14 items-center justify-center rounded-full border border-[var(--secondary-border)] bg-[var(--secondary-bg)] px-[1.4rem] py-[0.9rem] font-extrabold text-[var(--foreground)] transition duration-200 hover:-translate-y-0.5 max-[700px]:w-full"
@@ -106,19 +71,19 @@ export default function Hero({ currentRelease }: HeroProps) {
               data-analytics-label="Hero demo"
               data-analytics-target="hero-demo"
             >
-              See the demo
+              {content.hero.secondaryCta}
             </a>
           </div>
 
-          <ul className="mt-8 grid gap-[0.9rem] p-0" aria-label="Key product benefits">
+          <ul className="mt-8 grid gap-[0.9rem] p-0" aria-label={content.hero.benefitsAriaLabel}>
             <li className="flex items-start gap-3 font-bold text-[var(--foreground)] before:mt-1 before:h-[0.85rem] before:w-[0.85rem] before:flex-none before:rounded-full before:bg-[var(--mint-deep)] before:shadow-[0_0_0_6px_rgba(114,213,183,0.18)] before:content-['']">
-              Live markup over slides, browsers, PDFs, and apps
+              {content.hero.benefits[0]}
             </li>
             <li className="flex items-start gap-3 font-bold text-[var(--foreground)] before:mt-1 before:h-[0.85rem] before:w-[0.85rem] before:flex-none before:rounded-full before:bg-[var(--mint-deep)] before:shadow-[0_0_0_6px_rgba(114,213,183,0.18)] before:content-['']">
-              Pen, phosphor highlighter, text, shapes, and screenshots
+              {content.hero.benefits[1]}
             </li>
             <li className="flex items-start gap-3 font-bold text-[var(--foreground)] before:mt-1 before:h-[0.85rem] before:w-[0.85rem] before:flex-none before:rounded-full before:bg-[var(--mint-deep)] before:shadow-[0_0_0_6px_rgba(114,213,183,0.18)] before:content-['']">
-              Floating toolbar with saved settings and shortcuts
+              {content.hero.benefits[2]}
             </li>
           </ul>
         </motion.div>
@@ -139,7 +104,7 @@ export default function Hero({ currentRelease }: HeroProps) {
             </span>
           </div>
 
-          <div className="mb-4 grid grid-cols-3 gap-[0.6rem] max-[700px]:grid-cols-1" role="tablist" aria-label="Interactive Superpen demo">
+          <div className="mb-4 grid grid-cols-3 gap-[0.6rem] max-[700px]:grid-cols-1" role="tablist" aria-label={content.hero.demoAriaLabel}>
             {demoModes.map((mode) => (
               <button
                 key={mode.id}
@@ -179,24 +144,24 @@ export default function Hero({ currentRelease }: HeroProps) {
             <div className={activeMode.id === "board" ? "absolute inset-[4.9rem_1.1rem_5.7rem] overflow-hidden rounded-[1.35rem] border border-[rgba(37,65,58,0.08)] bg-[rgba(255,255,255,0.7)] opacity-[0.18] max-[700px]:inset-[7rem_0.9rem_9.2rem] max-[520px]:inset-[7.6rem_0.75rem_10.1rem] max-[520px]:rounded-[1rem] dark:border-[rgba(203,221,214,0.1)] dark:bg-[rgba(21,27,27,0.76)]" : "absolute inset-[4.9rem_1.1rem_5.7rem] overflow-hidden rounded-[1.35rem] border border-[rgba(37,65,58,0.08)] bg-[rgba(255,255,255,0.7)] max-[700px]:inset-[7rem_0.9rem_9.2rem] max-[520px]:inset-[7.6rem_0.75rem_10.1rem] max-[520px]:rounded-[1rem] dark:border-[rgba(203,221,214,0.1)] dark:bg-[rgba(21,27,27,0.76)]"}>
               <div className="grid min-h-full grid-rows-[auto_1fr]">
                 <div className="flex flex-wrap items-center justify-between gap-4 border-b border-[rgba(37,65,58,0.08)] bg-[var(--surface-soft)] px-4 py-[0.8rem] max-[520px]:px-[0.8rem] dark:border-[rgba(203,221,214,0.1)]">
-                  <span className="text-[0.9rem] font-extrabold">Shared screen</span>
-                  <span className="text-[0.9rem] font-extrabold text-[var(--muted)]">Lesson notes</span>
+                  <span className="text-[0.9rem] font-extrabold">{content.hero.sharedScreen}</span>
+                  <span className="text-[0.9rem] font-extrabold text-[var(--muted)]">{content.hero.lessonNotes}</span>
                 </div>
 
                 <div className="grid min-h-full grid-cols-[10rem_1fr] max-[700px]:grid-cols-1">
                   <div className="grid content-start gap-3 border-r border-[rgba(37,65,58,0.08)] bg-[var(--surface-subtle)] p-4 max-[700px]:grid-flow-col max-[700px]:auto-cols-[minmax(0,1fr)] max-[700px]:overflow-x-auto max-[700px]:border-b max-[700px]:border-r-0 max-[520px]:px-[0.8rem] dark:border-[rgba(203,221,214,0.1)]">
-                    <span className="rounded-[0.95rem] bg-[rgba(255,207,191,0.72)] px-3 py-[0.65rem] text-[0.9rem] font-extrabold text-[#9a513f]">Algebra</span>
-                    <span className="rounded-[0.95rem] bg-[var(--surface-strong)] px-3 py-[0.65rem] text-[0.9rem] font-extrabold text-[var(--muted)]">Screenshots</span>
-                    <span className="rounded-[0.95rem] bg-[var(--surface-strong)] px-3 py-[0.65rem] text-[0.9rem] font-extrabold text-[var(--muted)]">Custom shapes</span>
+                    <span className="rounded-[0.95rem] bg-[rgba(255,207,191,0.72)] px-3 py-[0.65rem] text-[0.9rem] font-extrabold text-[#9a513f]">{content.hero.algebra}</span>
+                    <span className="rounded-[0.95rem] bg-[var(--surface-strong)] px-3 py-[0.65rem] text-[0.9rem] font-extrabold text-[var(--muted)]">{content.hero.screenshots}</span>
+                    <span className="rounded-[0.95rem] bg-[var(--surface-strong)] px-3 py-[0.65rem] text-[0.9rem] font-extrabold text-[var(--muted)]">{content.hero.customShapes}</span>
                   </div>
 
                   <div className="grid content-start gap-[1.2rem] p-[1.2rem] max-[520px]:px-[0.8rem]">
                     <div className="max-w-[18rem] rounded-2xl border border-[rgba(37,65,58,0.08)] bg-[var(--surface-strong)] px-[1.1rem] py-4">
                       <span className="block text-[0.78rem] font-extrabold uppercase tracking-[0.08em] text-[#cf7056]">
-                        Visible underneath Superpen
+                        {content.hero.visibleUnderneath}
                       </span>
-                      <h3 className="mt-2 text-[1.2rem] font-semibold max-[520px]:text-[1.05rem]">Quadratic review</h3>
-                      <p className="m-0 leading-[1.6] text-[var(--muted)]">Factor the expression and show each step clearly.</p>
+                      <h3 className="mt-2 text-[1.2rem] font-semibold max-[520px]:text-[1.05rem]">{content.hero.quadraticReview}</h3>
+                      <p className="m-0 leading-[1.6] text-[var(--muted)]">{content.hero.quadraticReviewDescription}</p>
                     </div>
 
                     <div className="grid gap-[0.8rem]" aria-hidden="true">
@@ -213,13 +178,13 @@ export default function Hero({ currentRelease }: HeroProps) {
             <div className="absolute left-4 top-4 z-[2] flex w-[min(20rem,calc(100%-2rem))] flex-wrap gap-[0.65rem] max-[700px]:relative max-[700px]:left-auto max-[700px]:top-auto max-[700px]:w-auto max-[700px]:justify-start max-[700px]:px-[0.9rem] max-[700px]:pt-[0.9rem] max-[520px]:gap-2 max-[520px]:px-[0.75rem] max-[520px]:pt-[0.75rem]">
               <div className={activeMode.id === "board" ? "min-w-0 flex-1 basis-32 rounded-2xl border border-[rgba(255,255,255,0.08)] bg-[rgba(35,38,39,0.9)] px-[0.85rem] py-[0.7rem] text-[#f3f3f3] shadow-[0_10px_28px_rgba(78,63,37,0.1)]" : "min-w-0 flex-1 basis-32 rounded-2xl border border-[rgba(37,65,58,0.1)] bg-[var(--surface-panel)] px-[0.85rem] py-[0.7rem] shadow-[0_10px_28px_rgba(78,63,37,0.1)]"}>
                 <span className={activeMode.id === "board" ? "mb-1 block text-[0.72rem] font-extrabold uppercase tracking-[0.08em] text-[rgba(255,255,255,0.66)] max-[520px]:text-[0.66rem]" : "mb-1 block text-[0.72rem] font-extrabold uppercase tracking-[0.08em] text-[var(--muted)] max-[520px]:text-[0.66rem]"}>
-                  Active tool
+                  {content.hero.activeToolLabel}
                 </span>
                 <strong>{activeMode.activeTool}</strong>
               </div>
               <div className={activeMode.id === "board" ? "min-w-0 flex-1 basis-32 rounded-2xl border border-[rgba(255,255,255,0.08)] bg-[rgba(35,38,39,0.9)] px-[0.85rem] py-[0.7rem] text-[#f3f3f3] shadow-[0_10px_28px_rgba(78,63,37,0.1)]" : "min-w-0 flex-1 basis-32 rounded-2xl border border-[rgba(37,65,58,0.1)] bg-[var(--surface-panel)] px-[0.85rem] py-[0.7rem] shadow-[0_10px_28px_rgba(78,63,37,0.1)]"}>
                 <span className={activeMode.id === "board" ? "mb-1 block text-[0.72rem] font-extrabold uppercase tracking-[0.08em] text-[rgba(255,255,255,0.66)] max-[520px]:text-[0.66rem]" : "mb-1 block text-[0.72rem] font-extrabold uppercase tracking-[0.08em] text-[var(--muted)] max-[520px]:text-[0.66rem]"}>
-                  Overlay state
+                  {content.hero.overlayStateLabel}
                 </span>
                 <strong>{activeMode.status}</strong>
               </div>
@@ -246,11 +211,11 @@ export default function Hero({ currentRelease }: HeroProps) {
               <div className="ml-auto inline-grid shrink-0 grid-flow-col gap-2 max-[700px]:col-span-full max-[700px]:grid-cols-2 max-[700px]:ml-0">
                 <div className={activeMode.id === "board" ? "inline-grid grid-flow-col items-center justify-items-start gap-[0.45rem] whitespace-nowrap rounded-[0.9rem] bg-[rgba(255,255,255,0.06)] px-[0.7rem] py-[0.55rem] text-[0.72rem] font-extrabold text-[rgba(255,255,255,0.85)] max-[520px]:px-[0.55rem] max-[520px]:text-[0.68rem]" : "inline-grid grid-flow-col items-center justify-items-start gap-[0.45rem] whitespace-nowrap rounded-[0.9rem] bg-[rgba(37,65,58,0.06)] px-[0.7rem] py-[0.55rem] text-[0.72rem] font-extrabold text-[var(--foreground)] max-[520px]:px-[0.55rem] max-[520px]:text-[0.68rem]"}>
                   <span className="h-4 w-4 rounded-full border border-[rgba(0,0,0,0.08)] bg-[#ff4444]" />
-                  <strong>#FF4444</strong>
+                  <strong>{content.hero.colorValue}</strong>
                 </div>
                 <div className={activeMode.id === "board" ? "inline-grid grid-flow-col items-center justify-items-start gap-[0.45rem] whitespace-nowrap rounded-[0.9rem] bg-[rgba(255,255,255,0.06)] px-[0.7rem] py-[0.55rem] text-[0.72rem] font-extrabold text-[rgba(255,255,255,0.85)] max-[520px]:px-[0.55rem] max-[520px]:text-[0.68rem]" : "inline-grid grid-flow-col items-center justify-items-start gap-[0.45rem] whitespace-nowrap rounded-[0.9rem] bg-[rgba(37,65,58,0.06)] px-[0.7rem] py-[0.55rem] text-[0.72rem] font-extrabold text-[var(--foreground)] max-[520px]:px-[0.55rem] max-[520px]:text-[0.68rem]"}>
                   <span className="h-2 w-2 rounded-full bg-[#ff4444] shadow-[0_0_0_4px_rgba(255,68,68,0.18)]" />
-                  <strong>3 px</strong>
+                  <strong>{content.hero.penSize}</strong>
                 </div>
               </div>
             </div>
@@ -261,7 +226,7 @@ export default function Hero({ currentRelease }: HeroProps) {
                 viewBox="0 0 620 360"
                 className="pointer-events-none absolute inset-0 z-[2] h-full w-full"
                 role="img"
-                aria-label="Preview of Superpen drawing over a shared screen"
+                aria-label={content.hero.demoAriaLabel}
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ duration: 0.35 }}
@@ -310,7 +275,7 @@ export default function Hero({ currentRelease }: HeroProps) {
                   transition={{ duration: 0.45, delay: 0.45 }}
                 />
                 <text x="355" y="112" fill="#b95845" fontSize="1.05rem" fontWeight="800" letterSpacing="0.01em">
-                  explain this step
+                  {content.hero.explainThisStep}
                 </text>
               </motion.svg>
             )}
@@ -331,9 +296,9 @@ export default function Hero({ currentRelease }: HeroProps) {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.35 }}
                 >
-                  <span className="rounded-full bg-[rgba(37,65,58,0.08)] px-[0.72rem] py-[0.45rem] text-[0.85rem] font-extrabold text-[var(--foreground)] dark:bg-[rgba(255,255,255,0.08)] dark:text-[#d4e1dc] max-[520px]:px-[0.62rem] max-[520px]:py-[0.42rem] max-[520px]:text-[0.78rem]">Copy</span>
-                  <span className="rounded-full bg-[rgba(37,65,58,0.08)] px-[0.72rem] py-[0.45rem] text-[0.85rem] font-extrabold text-[var(--foreground)] dark:bg-[rgba(255,255,255,0.08)] dark:text-[#d4e1dc] max-[520px]:px-[0.62rem] max-[520px]:py-[0.42rem] max-[520px]:text-[0.78rem]">Save</span>
-                  <span className="rounded-full bg-[rgba(37,65,58,0.08)] px-[0.72rem] py-[0.45rem] text-[0.85rem] font-extrabold text-[var(--foreground)] dark:bg-[rgba(255,255,255,0.08)] dark:text-[#d4e1dc] max-[520px]:px-[0.62rem] max-[520px]:py-[0.42rem] max-[520px]:text-[0.78rem]">Cancel</span>
+                  <span className="rounded-full bg-[rgba(37,65,58,0.08)] px-[0.72rem] py-[0.45rem] text-[0.85rem] font-extrabold text-[var(--foreground)] dark:bg-[rgba(255,255,255,0.08)] dark:text-[#d4e1dc] max-[520px]:px-[0.62rem] max-[520px]:py-[0.42rem] max-[520px]:text-[0.78rem]">{content.hero.copy}</span>
+                  <span className="rounded-full bg-[rgba(37,65,58,0.08)] px-[0.72rem] py-[0.45rem] text-[0.85rem] font-extrabold text-[var(--foreground)] dark:bg-[rgba(255,255,255,0.08)] dark:text-[#d4e1dc] max-[520px]:px-[0.62rem] max-[520px]:py-[0.42rem] max-[520px]:text-[0.78rem]">{content.hero.save}</span>
+                  <span className="rounded-full bg-[rgba(37,65,58,0.08)] px-[0.72rem] py-[0.45rem] text-[0.85rem] font-extrabold text-[var(--foreground)] dark:bg-[rgba(255,255,255,0.08)] dark:text-[#d4e1dc] max-[520px]:px-[0.62rem] max-[520px]:py-[0.42rem] max-[520px]:text-[0.78rem]">{content.hero.cancel}</span>
                 </motion.div>
               </>
             )}
@@ -345,7 +310,7 @@ export default function Hero({ currentRelease }: HeroProps) {
                   viewBox="0 0 620 360"
                   className="pointer-events-none absolute inset-0 z-[2] h-full w-full opacity-95"
                   role="img"
-                  aria-label="Preview of Superpen board mode"
+                  aria-label={content.hero.demoAriaLabel}
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   transition={{ duration: 0.35 }}
@@ -373,13 +338,13 @@ export default function Hero({ currentRelease }: HeroProps) {
                     transition={{ duration: 0.9, ease: "easeOut", delay: 0.2 }}
                   />
                   <text x="188" y="96" fill="#f2f2f2" fontSize="1.05rem" fontWeight="800" letterSpacing="0.01em">
-                    board mode on
+                    {content.hero.boardModeOn}
                   </text>
                 </motion.svg>
 
                 <div className="absolute left-4 right-auto top-[5.9rem] z-[3] inline-flex items-center gap-[0.65rem] rounded-2xl border border-[rgba(255,255,255,0.08)] bg-[rgba(35,38,39,0.92)] px-4 py-[0.85rem] text-[#f3f3f3] shadow-[0_10px_28px_rgba(78,63,37,0.1)] max-[700px]:left-4 max-[700px]:right-4 max-[700px]:top-44 max-[520px]:left-[0.8rem] max-[520px]:right-[0.8rem] max-[520px]:top-[11.2rem] max-[520px]:px-[0.8rem] max-[520px]:py-[0.7rem]">
                   <span className="h-[0.8rem] w-[0.8rem] rounded-full border border-[rgba(255,255,255,0.22)] bg-[#111]" />
-                  <strong>Background: black board</strong>
+                  <strong>{content.hero.boardBackground}</strong>
                 </div>
               </>
             )}
@@ -400,9 +365,9 @@ export default function Hero({ currentRelease }: HeroProps) {
             <span className="h-4 w-4 rounded-full bg-[var(--coral)]" />
             <span className="h-4 w-4 rounded-full bg-[rgba(37,65,58,0.12)]" />
             <span className="h-4 w-4 rounded-full bg-[rgba(37,65,58,0.12)]" />
-            <span className="rounded-full bg-[var(--surface-panel)] px-[0.8rem] py-[0.5rem] text-[0.92rem] font-extrabold text-[var(--muted)] max-[520px]:px-[0.55rem] max-[520px]:py-[0.45rem] max-[520px]:text-[0.8rem]">Click-through</span>
-            <span className="rounded-full bg-[var(--surface-panel)] px-[0.8rem] py-[0.5rem] text-[0.92rem] font-extrabold text-[var(--muted)] max-[520px]:px-[0.55rem] max-[520px]:py-[0.45rem] max-[520px]:text-[0.8rem]">Saved settings</span>
-            <span className="rounded-full bg-[var(--surface-panel)] px-[0.8rem] py-[0.5rem] text-[0.92rem] font-extrabold text-[var(--muted)] max-[520px]:px-[0.55rem] max-[520px]:py-[0.45rem] max-[520px]:text-[0.8rem]">Floating toolbar</span>
+            <span className="rounded-full bg-[var(--surface-panel)] px-[0.8rem] py-[0.5rem] text-[0.92rem] font-extrabold text-[var(--muted)] max-[520px]:px-[0.55rem] max-[520px]:py-[0.45rem] max-[520px]:text-[0.8rem]">{content.hero.clickThrough}</span>
+            <span className="rounded-full bg-[var(--surface-panel)] px-[0.8rem] py-[0.5rem] text-[0.92rem] font-extrabold text-[var(--muted)] max-[520px]:px-[0.55rem] max-[520px]:py-[0.45rem] max-[520px]:text-[0.8rem]">{content.hero.savedSettings}</span>
+            <span className="rounded-full bg-[var(--surface-panel)] px-[0.8rem] py-[0.5rem] text-[0.92rem] font-extrabold text-[var(--muted)] max-[520px]:px-[0.55rem] max-[520px]:py-[0.45rem] max-[520px]:text-[0.8rem]">{content.hero.floatingToolbar}</span>
           </div>
         </motion.div>
       </div>

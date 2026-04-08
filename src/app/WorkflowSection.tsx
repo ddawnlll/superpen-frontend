@@ -1,11 +1,11 @@
+"use client";
+
 import Reveal from "./Reveal";
-import type { Step } from "./landing-content";
+import { useLandingContent } from "./LocaleProvider";
 
-type WorkflowSectionProps = {
-  steps: Step[];
-};
-
-export default function WorkflowSection({ steps }: WorkflowSectionProps) {
+export default function WorkflowSection() {
+  const content = useLandingContent();
+  const steps = content.workflowSection.steps;
   return (
     <section
       className="mx-auto my-0 w-[min(1180px,calc(100%-2rem))] px-[clamp(0rem,1vw,0.25rem)] py-[clamp(3.75rem,7vw,5.75rem)] max-[820px]:w-[min(100%-1.25rem,1180px)] max-[520px]:w-[min(100%-1rem,1180px)] max-[520px]:py-[2.8rem]"
@@ -14,17 +14,16 @@ export default function WorkflowSection({ steps }: WorkflowSectionProps) {
       <div className="grid items-start gap-8 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] lg:gap-12">
         <Reveal className="max-w-[34rem]">
           <span className="inline-flex items-center rounded-full border border-[rgba(255,127,102,0.18)] bg-[var(--surface-strong)] px-3 py-[0.55rem] text-[0.76rem] font-extrabold uppercase tracking-[0.12em] text-[#c7664d] shadow-[0_10px_24px_rgba(210,124,102,0.08)]">
-            How it works
+            {content.workflowSection.badge}
           </span>
           <h2
             id="workflow-title"
             className="mt-4 text-balance font-[Georgia,Palatino_Linotype,Book_Antiqua,serif] text-[clamp(2.2rem,5vw,3.35rem)] leading-[1.04] tracking-[-0.035em] text-[var(--foreground)]"
           >
-            Built around fast desktop markup, not heavyweight canvas setup.
+            {content.workflowSection.title}
           </h2>
           <p className="mt-4 text-[1.02rem] leading-[1.8] text-[var(--muted)] max-[520px]:text-[0.96rem]">
-            Superpen stays out of the way until you need it, then gives you the
-            right tool quickly for explanation, annotation, or capture.
+            {content.workflowSection.description}
           </p>
         </Reveal>
 

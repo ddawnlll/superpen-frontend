@@ -11,15 +11,7 @@ import Hero from "./Hero";
 import Navbar from "./Navbar";
 import WorkflowSection from "./WorkflowSection";
 import { getSiteData } from "@/lib/superpen-api-server";
-import {
-  audiences,
-  capabilities,
-  comparisonRows,
-  faq,
-  features,
-  softwareStructuredData,
-  steps,
-} from "./landing-content";
+import { softwareStructuredData } from "./landing-content";
 
 export const metadata: Metadata = {
   title: "Superpen | Qt screen annotation overlay in alpha early access",
@@ -60,12 +52,12 @@ export default async function Home() {
         <AnalyticsTracker />
         <Navbar />
         <Hero currentRelease={siteData.currentRelease} />
-        <FeaturesSection features={features} />
-        <ComparisonSection comparisonRows={comparisonRows} />
-        <WorkflowSection steps={steps} />
-        <AudienceSection audiences={audiences} />
-        <CapabilitiesSection capabilities={capabilities} />
-        <FaqSection faq={faq} />
+        <FeaturesSection />
+        <ComparisonSection />
+        <WorkflowSection />
+        <AudienceSection />
+        <CapabilitiesSection />
+        <FaqSection />
         <CtaSection currentRelease={siteData.currentRelease} releases={siteData.releases} />
       </main>
     </>
