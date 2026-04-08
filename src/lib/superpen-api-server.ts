@@ -15,6 +15,15 @@ const DEFAULT_SITE_DATA: SiteData = {
   generatedAt: new Date().toISOString(),
 };
 
+const SITE_DATA_REVALIDATE_SECONDS = 60 * 60;
+
+type ServiceLoginCache = {
+  login: LoginResponse;
+  expiresAt: number;
+};
+
+let cachedServiceLogin: ServiceLoginCache | null = null;
+
 export async function getServiceLogin(
   apiBaseUrl = getApiBaseUrl(),
 ): Promise<LoginResponse | null> {
@@ -25,8 +34,20 @@ export async function getServiceLogin(
     return null;
   }
 
+  if (cachedServiceLogin && cachedServiceLogin.expiresAt > Date.now()) {
+    return cachedServiceLogin.login;
+  }
+
   try {
-    return await loginWithCredentials(username, password, apiBaseUrl);
+    const login = await loginWithCredentials(username, password, apiBaseUrl);
+    const ttlMs = Math.max((login.expiresInMinutes - 1) * 60_000, 60_000);
+
+    cachedServiceLogin = {
+      login,
+      expiresAt: Date.now() + ttlMs,
+    };
+
+    return login;
   } catch {
     return null;
   }
@@ -40,16 +61,22 @@ export async function getServiceToken(apiBaseUrl = getApiBaseUrl()): Promise<str
 export async function getSiteData(): Promise<SiteData> {
   try {
     const apiBaseUrl = getApiBaseUrl();
-    const token = await getServiceToken(apiBaseUrl);
-
-    const response = await fetch(`${apiBaseUrl}/api/public/site-data`, {
-      cache: "no-store",
-      headers: token
-        ? {
-            Authorization: `Bearer ${token}`,
-          }
-        : undefined,
+    let response = await fetch(`${apiBaseUrl}/api/public/site-data`, {
+      next: { revalidate: SITE_DATA_REVALIDATE_SECONDS },
     });
+
+    if (response.status === 401 || response.status === 403) {
+      const token = await getServiceToken(apiBaseUrl);
+
+      response = await fetch(`${apiBaseUrl}/api/public/site-data`, {
+        headers: token
+          ? {
+              Authorization: `Bearer ${token}`,
+            }
+          : undefined,
+        next: { revalidate: SITE_DATA_REVALIDATE_SECONDS },
+      });
+    }
 
     if (!response.ok) {
       return DEFAULT_SITE_DATA;

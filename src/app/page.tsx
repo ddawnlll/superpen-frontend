@@ -1,17 +1,21 @@
 import type { Metadata } from "next";
+import dynamic from "next/dynamic";
 import Script from "next/script";
-import AnalyticsTracker from "./AnalyticsTracker";
-import AudienceSection from "./AudienceSection";
-import CapabilitiesSection from "./CapabilitiesSection";
-import ComparisonSection from "./ComparisonSection";
-import CtaSection from "./CtaSection";
-import FaqSection from "./FaqSection";
-import FeaturesSection from "./FeaturesSection";
 import Hero from "./Hero";
 import Navbar from "./Navbar";
-import WorkflowSection from "./WorkflowSection";
 import { getSiteData } from "@/lib/superpen-api-server";
 import { softwareStructuredData } from "./landing-content";
+
+const AnalyticsTracker = dynamic(() => import("./AnalyticsTracker"), {
+  loading: () => null,
+});
+const FeaturesSection = dynamic(() => import("./FeaturesSection"), { loading: () => null });
+const ComparisonSection = dynamic(() => import("./ComparisonSection"), { loading: () => null });
+const WorkflowSection = dynamic(() => import("./WorkflowSection"), { loading: () => null });
+const AudienceSection = dynamic(() => import("./AudienceSection"), { loading: () => null });
+const CapabilitiesSection = dynamic(() => import("./CapabilitiesSection"), { loading: () => null });
+const FaqSection = dynamic(() => import("./FaqSection"), { loading: () => null });
+const CtaSection = dynamic(() => import("./CtaSection"), { loading: () => null });
 
 export const metadata: Metadata = {
   title: "Superpen | Qt screen annotation overlay in alpha early access",

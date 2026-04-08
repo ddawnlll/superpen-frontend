@@ -77,23 +77,7 @@ function track(payload: Record<string, unknown>, useBeacon = false) {
 
 export default function AnalyticsTracker() {
   useEffect(() => {
-    getVisitorId();
-    getSessionId();
-    syncTrackingCookies();
-
-    track({
-      eventType: "page_view",
-      metadata: {
-        url: window.location.href,
-      },
-    });
-
-    const heartbeat = window.setInterval(() => {
-      track({
-        eventType: "session_heartbeat",
-        elapsedSeconds: getElapsedSeconds(),
-      });
-    }, HEARTBEAT_MS);
+    let heartbeat: number | undefined;
 
     const onPageHide = () => {
       track(
@@ -136,12 +120,41 @@ export default function AnalyticsTracker() {
       });
     };
 
-    window.addEventListener("click", onClick, true);
-    window.addEventListener("pagehide", onPageHide);
-    window.addEventListener("beforeunload", onPageHide);
+    const startTracking = () => {
+      getVisitorId();
+      getSessionId();
+      syncTrackingCookies();
+
+      track({
+        eventType: "page_view",
+        metadata: {
+          url: window.location.href,
+        },
+      });
+
+      heartbeat = window.setInterval(() => {
+        track({
+          eventType: "session_heartbeat",
+          elapsedSeconds: getElapsedSeconds(),
+        });
+      }, HEARTBEAT_MS);
+
+      window.addEventListener("click", onClick, true);
+      window.addEventListener("pagehide", onPageHide);
+      window.addEventListener("beforeunload", onPageHide);
+    };
+
+    const startupTimer = window.setTimeout(startTracking, 1200);
 
     return () => {
-      window.clearInterval(heartbeat);
+      if (heartbeat) {
+        window.clearInterval(heartbeat);
+      }
+
+      if (startupTimer) {
+        window.clearTimeout(startupTimer);
+      }
+
       window.removeEventListener("click", onClick, true);
       window.removeEventListener("pagehide", onPageHide);
       window.removeEventListener("beforeunload", onPageHide);

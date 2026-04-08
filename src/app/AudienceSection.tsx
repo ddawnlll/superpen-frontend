@@ -75,7 +75,12 @@ export default function AudienceSection() {
               key={audience.title}
               role="article"
               className={[
-                "h-full rounded-[1.6rem] border border-[var(--line)] bg-[var(--surface)] p-6 shadow-[0_18px_36px_rgba(79,63,37,0.08)] max-[520px]:rounded-[1.25rem] max-[520px]:p-5",
+                "h-full rounded-[1.6rem] border border-[var(--line)] bg-[var(--surface)] p-6 shadow-[0_18px_36px_rgba(79,63,37,0.08)] transition-transform duration-200 max-[520px]:rounded-[1.25rem] max-[520px]:p-5",
+                prefersReducedMotion
+                  ? ""
+                  : isFeatured
+                    ? "hover:-translate-y-3"
+                    : "hover:-translate-y-1",
                 isFeatured
                   ? "md:-translate-y-[10px] md:border-[rgba(114,213,183,0.38)] md:bg-[linear-gradient(160deg,rgba(114,213,183,0.07),var(--surface)_55%)] md:shadow-[0_28px_56px_rgba(79,63,37,0.13)]"
                   : "",
@@ -89,13 +94,6 @@ export default function AudienceSection() {
                 prefersReducedMotion
                   ? { duration: 0.2, delay: cardDelay * 0.5 }
                   : { delay: cardDelay, type: "spring", stiffness: 260, damping: 22 }
-              }
-              whileHover={
-                prefersReducedMotion
-                  ? undefined
-                  : isFeatured
-                    ? { y: -12 }
-                    : { y: -4 }
               }
             >
               {isFeatured ? (

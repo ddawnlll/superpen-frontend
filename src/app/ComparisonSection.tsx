@@ -5,8 +5,6 @@ import {
   motion,
   useInView,
   useReducedMotion,
-  useScroll,
-  useTransform,
 } from "framer-motion";
 import type { ComparisonRow } from "./landing-content";
 import { useLandingContent } from "./LocaleProvider";
@@ -22,7 +20,10 @@ function AnimatedBadge({ label, icon, index }: AnimatedBadgeProps) {
 
   return (
     <motion.span
-      className="inline-flex shrink-0 items-center gap-3 rounded-full border border-[rgba(255,127,102,0.18)] bg-[var(--surface-strong)] px-3 py-2 text-[0.92rem] font-extrabold text-[var(--foreground)] shadow-[0_14px_30px_rgba(79,63,37,0.08)]"
+      className={[
+        "inline-flex shrink-0 items-center gap-3 rounded-full border border-[rgba(255,127,102,0.18)] bg-[var(--surface-strong)] px-3 py-2 text-[0.92rem] font-extrabold text-[var(--foreground)] shadow-[0_14px_30px_rgba(79,63,37,0.08)] transition-transform duration-200",
+        prefersReducedMotion ? "" : "hover:-translate-y-0.5 hover:scale-[1.04] active:scale-[0.98]",
+      ].join(" ")}
       initial={prefersReducedMotion ? false : { opacity: 0, scale: 0.82, y: 12 }}
       whileInView={prefersReducedMotion ? { opacity: 1 } : { opacity: 1, scale: 1, y: 0 }}
       viewport={{ once: true, amount: 0.55 }}
@@ -31,8 +32,6 @@ function AnimatedBadge({ label, icon, index }: AnimatedBadgeProps) {
           ? { duration: 0.18, delay: index * 0.03 }
           : { delay: index * 0.08, type: "spring", stiffness: 280, damping: 20 }
       }
-      whileHover={prefersReducedMotion ? undefined : { scale: 1.04, y: -2 }}
-      whileTap={prefersReducedMotion ? undefined : { scale: 0.98 }}
     >
       <span
         className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-[linear-gradient(135deg,rgba(255,127,102,0.18),rgba(114,213,183,0.24))] text-[0.78rem] font-black text-[#b95845]"
@@ -40,12 +39,8 @@ function AnimatedBadge({ label, icon, index }: AnimatedBadgeProps) {
       >
         {icon}
       </span>
-      <span>{label}</span>
-      <span
-        className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-[rgba(114,213,183,0.18)] text-[0.78rem] font-black text-[#1d7f62]"
-        aria-hidden="true"
-      >
-        +
+      <span className="inline-flex items-center gap-2 after:inline-flex after:h-5 after:w-5 after:items-center after:justify-center after:rounded-full after:bg-[rgba(114,213,183,0.18)] after:text-[0.78rem] after:font-black after:text-[#1d7f62] after:content-['+']">
+        {label}
       </span>
     </motion.span>
   );
@@ -137,7 +132,7 @@ type RaceRowProps = {
 function RaceRow({ row, superpenLeadsLabel, competitorLabel }: RaceRowProps) {
   const prefersReducedMotion = useReducedMotion();
   const rowRef = useRef<HTMLDivElement | null>(null);
-  const inView = useInView(rowRef, { once: true, margin: "-12% 0px -12% 0px" });
+  const inView = useInView(rowRef, { once: true, amount: 0.2 });
   const isWinning = row.winner === "superpen";
   const isBoth = row.winner === "both";
 
@@ -226,11 +221,6 @@ export default function ComparisonSection() {
   const comparisonRows = content.comparisonSection.rows;
   const panelRef = useRef<HTMLDivElement | null>(null);
   const prefersReducedMotion = useReducedMotion();
-  const { scrollYProgress } = useScroll({
-    target: panelRef,
-    offset: ["start 75%", "end 25%"],
-  });
-  const progressScaleY = useTransform(scrollYProgress, [0, 1], [0, 1]);
 
   return (
     <section
@@ -283,7 +273,10 @@ export default function ComparisonSection() {
         >
           <motion.div
             className="h-full w-full origin-top rounded-full bg-[linear-gradient(180deg,#ff7f66,#72d5b7)]"
-            style={{ scaleY: prefersReducedMotion ? 1 : progressScaleY }}
+            initial={prefersReducedMotion ? false : { scaleY: 0 }}
+            whileInView={{ scaleY: 1 }}
+            viewport={{ once: true, amount: 0.15 }}
+            transition={prefersReducedMotion ? { duration: 0 } : { duration: 0.8, ease: "easeOut" }}
           />
         </div>
 

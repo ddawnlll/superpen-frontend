@@ -60,6 +60,7 @@ html[data-theme="dark"] {
 
 html {
   scroll-behavior: smooth;
+  scroll-padding-top: 7rem;
   scrollbar-gutter: stable;
   scrollbar-color: var(--scroll-thumb-start) var(--surface-soft);
   background: var(--background);
@@ -128,6 +129,10 @@ textarea {
 }
 
 @media (max-width: 520px) {
+  html {
+    scroll-padding-top: 5.25rem;
+  }
+
   html::-webkit-scrollbar {
     width: 10px;
   }
