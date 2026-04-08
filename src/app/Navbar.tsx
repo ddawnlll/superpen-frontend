@@ -12,6 +12,7 @@ const THEME_ORDER: ThemePreference[] = ["system", "light", "dark"];
 const themeListeners = new Set<() => void>();
 
 let currentThemeState: { preference: ThemePreference; resolvedTheme: ResolvedTheme } | null = null;
+const serverThemeSnapshot = { preference: "system" as ThemePreference, resolvedTheme: "light" as ResolvedTheme };
 
 function resolveTheme(preference: ThemePreference, prefersDark: boolean): ResolvedTheme {
   return preference === "system" ? (prefersDark ? "dark" : "light") : preference;
@@ -47,7 +48,7 @@ function subscribeToTheme(listener: () => void) {
 }
 
 function getServerThemeSnapshot() {
-  return { preference: "system" as ThemePreference, resolvedTheme: "light" as ResolvedTheme };
+  return serverThemeSnapshot;
 }
 
 function getClientThemeSnapshot() {
@@ -99,12 +100,13 @@ export default function Navbar() {
       return;
     }
 
-    const navbarHeight = wrapperRef.current?.getBoundingClientRect().height ?? 0;
-    const wrapperTop = wrapperRef.current?.getBoundingClientRect().top ?? 0;
-    const stickyOffset = Math.max(wrapperTop, 0);
-    const sectionPadding = window.innerWidth < 520 ? 14 : 20;
-    const extraOffset = navbarHeight + stickyOffset + sectionPadding;
-    const targetTop = window.scrollY + target.getBoundingClientRect().top - extraOffset;
+    const wrapperRect = wrapperRef.current?.getBoundingClientRect();
+    const navbarHeight = wrapperRect?.height ?? 0;
+    const stickyOffset = Math.max(wrapperRect?.top ?? 0, 0);
+    const topBuffer = navbarHeight + stickyOffset + (window.innerWidth < 520 ? 14 : 20);
+    const availableViewportHeight = Math.max(window.innerHeight - topBuffer, 0);
+    const centeredOffset = Math.max((availableViewportHeight - target.getBoundingClientRect().height) / 2, 0);
+    const targetTop = window.scrollY + target.getBoundingClientRect().top - topBuffer - centeredOffset;
 
     window.scrollTo({ top: Math.max(0, targetTop), behavior });
   }, []);
