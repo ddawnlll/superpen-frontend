@@ -1,21 +1,23 @@
 import type { Metadata } from "next";
-import dynamic from "next/dynamic";
+import nextDynamic from "next/dynamic";
 import Script from "next/script";
 import Hero from "./Hero";
 import Navbar from "./Navbar";
 import { getSiteData } from "@/lib/superpen-api-server";
 import { softwareStructuredData } from "./landing-content";
 
-const AnalyticsTracker = dynamic(() => import("./AnalyticsTracker"), {
+const AnalyticsTracker = nextDynamic(() => import("./AnalyticsTracker"), {
   loading: () => null,
 });
-const FeaturesSection = dynamic(() => import("./FeaturesSection"), { loading: () => null });
-const ComparisonSection = dynamic(() => import("./ComparisonSection"), { loading: () => null });
-const WorkflowSection = dynamic(() => import("./WorkflowSection"), { loading: () => null });
-const AudienceSection = dynamic(() => import("./AudienceSection"), { loading: () => null });
-const CapabilitiesSection = dynamic(() => import("./CapabilitiesSection"), { loading: () => null });
-const FaqSection = dynamic(() => import("./FaqSection"), { loading: () => null });
-const CtaSection = dynamic(() => import("./CtaSection"), { loading: () => null });
+const FeaturesSection = nextDynamic(() => import("./FeaturesSection"), { loading: () => null });
+const ComparisonSection = nextDynamic(() => import("./ComparisonSection"), { loading: () => null });
+const WorkflowSection = nextDynamic(() => import("./WorkflowSection"), { loading: () => null });
+const AudienceSection = nextDynamic(() => import("./AudienceSection"), { loading: () => null });
+const CapabilitiesSection = nextDynamic(() => import("./CapabilitiesSection"), { loading: () => null });
+const FaqSection = nextDynamic(() => import("./FaqSection"), { loading: () => null });
+const CtaSection = nextDynamic(() => import("./CtaSection"), { loading: () => null });
+
+export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "Superpen | Qt screen annotation overlay in alpha early access",

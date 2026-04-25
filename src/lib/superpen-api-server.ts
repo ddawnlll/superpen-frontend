@@ -15,7 +15,6 @@ const DEFAULT_SITE_DATA: SiteData = {
   generatedAt: new Date().toISOString(),
 };
 
-const SITE_DATA_REVALIDATE_SECONDS = 60 * 60;
 
 type ServiceLoginCache = {
   login: LoginResponse;
@@ -62,7 +61,7 @@ export async function getSiteData(): Promise<SiteData> {
   try {
     const apiBaseUrl = getApiBaseUrl();
     let response = await fetch(`${apiBaseUrl}/api/public/site-data`, {
-      next: { revalidate: SITE_DATA_REVALIDATE_SECONDS },
+      cache: "no-store",
     });
 
     if (response.status === 401 || response.status === 403) {
@@ -74,7 +73,7 @@ export async function getSiteData(): Promise<SiteData> {
               Authorization: `Bearer ${token}`,
             }
           : undefined,
-        next: { revalidate: SITE_DATA_REVALIDATE_SECONDS },
+        cache: "no-store",
       });
     }
 
