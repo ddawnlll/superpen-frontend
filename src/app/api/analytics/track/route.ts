@@ -78,6 +78,7 @@ export async function POST(request: NextRequest) {
 
   const token = await getServiceToken();
   if (!token) {
+    console.error("[analytics] Missing service token. Check SUPERPEN_API_USERNAME, SUPERPEN_API_PASSWORD, and SUPERPEN_API_BASE_URL.");
     return NextResponse.json({ error: "Analytics service credentials are missing" }, { status: 503 });
   }
 
@@ -98,6 +99,12 @@ export async function POST(request: NextRequest) {
 
   if (!response.ok) {
     const errorText = await response.text().catch(() => "");
+    console.error("[analytics] Backend analytics request failed", {
+      status: response.status,
+      errorText,
+      apiBaseUrl: getApiBaseUrl(),
+      eventType: payload.eventType,
+    });
     return NextResponse.json(
       { error: errorText || `Analytics request failed (${response.status})` },
       { status: response.status },

@@ -9,7 +9,7 @@ It is designed to help another model understand the project before generating pr
 ## 1) Project identity
 
 - Name: `superpen-frontend`
-- Version: `0.1.2`
+- Version: `0.1.3`
 - Type: Next.js app using the App Router
 - Purpose:
   - Public marketing / landing site for SuperPen
@@ -513,7 +513,7 @@ Defined in `src/app/landing-content.ts`.
 - `SoftwareApplication`
 - operating system: Windows
 - price: 0 USD
-- softwareVersion default in static object: `0.1.2-alpha`
+- softwareVersion default in static object: `0.1.3-alpha`
 - runtime page overrides `softwareVersion` and `downloadUrl` using backend site data
 
 ## 18) UI component notes

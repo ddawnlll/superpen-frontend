@@ -72,7 +72,18 @@ function track(payload: Record<string, unknown>, useBeacon = false) {
     },
     body,
     keepalive: useBeacon,
-  }).catch(() => undefined);
+  })
+    .then(async (response) => {
+      if (response.ok) {
+        return;
+      }
+
+      const errorText = await response.text().catch(() => "");
+      console.warn("[analytics] Track request failed", response.status, errorText || response.statusText);
+    })
+    .catch((error) => {
+      console.warn("[analytics] Track request errored", error);
+    });
 }
 
 export default function AnalyticsTracker() {

@@ -477,7 +477,7 @@ const landingContentByLocale: Record<Locale, LandingContent> = {
       operatingSystem: "Windows",
       description:
         "A Qt-based desktop overlay in alpha early access for drawing, highlighting, adding text, placing shapes, and capturing screenshots on top of any screen.",
-      softwareVersion: "0.1.2-alpha",
+      softwareVersion: "0.1.3-alpha",
       offers: {
         "@type": "Offer",
         price: "0",
@@ -783,7 +783,7 @@ const landingContentByLocale: Record<Locale, LandingContent> = {
       operatingSystem: "Windows",
       description:
         "Herhangi bir ekranın üstünde çizim yapmak, vurgulamak, metin eklemek, şekiller yerleştirmek ve ekran görüntüsü almak için alfa erken erişimde Qt tabanlı masaüstü katmanı.",
-      softwareVersion: "0.1.2-alpha",
+      softwareVersion: "0.1.3-alpha",
       offers: {
         "@type": "Offer",
         price: "0",

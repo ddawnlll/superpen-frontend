@@ -82,6 +82,16 @@ type SessionLoginResponse = {
   expiresInMinutes: number;
 };
 
+type LoginFailureDetails = {
+  reason?: string;
+  apiBaseUrl?: string;
+  backendUrl?: string;
+  status?: number;
+  backendError?: string;
+  rawError?: string;
+  suggestion?: string;
+};
+
 function formatNumber(value: number) {
   return new Intl.NumberFormat("en-US").format(value);
 }
@@ -163,6 +173,7 @@ export default function AdminPanel({ loginNextPath = "/admin" }: { loginNextPath
   const [timelineEvents, setTimelineEvents] = useState<AnalyticsTimelineEvent[]>([]);
   const [form, setForm] = useState<ReleaseFormState>(EMPTY_FORM);
   const [message, setMessage] = useState("Log in to manage releases and analytics.");
+  const [loginFailureDetails, setLoginFailureDetails] = useState<LoginFailureDetails | null>(null);
   const [isBusy, setIsBusy] = useState(false);
 
   useEffect(() => {
@@ -262,6 +273,7 @@ export default function AdminPanel({ loginNextPath = "/admin" }: { loginNextPath
     event.preventDefault();
     setIsBusy(true);
     setMessage("Signing in...");
+    setLoginFailureDetails(null);
     try {
       const response = await fetch("/api/admin/session/login", {
         method: "POST",
@@ -276,20 +288,28 @@ export default function AdminPanel({ loginNextPath = "/admin" }: { loginNextPath
 
       const payload = (await response.json().catch(() => null)) as
         | SessionLoginResponse
-        | { error?: string }
+        | { error?: string; details?: LoginFailureDetails }
         | null;
 
       if (!response.ok) {
+        setLoginFailureDetails((payload as { details?: LoginFailureDetails } | null)?.details || null);
         throw new Error((payload as { error?: string } | null)?.error || "Login failed.");
       }
 
       setIsAuthenticated(true);
+      setLoginFailureDetails(null);
       setMessage(`Signed in as ${(payload as SessionLoginResponse).user.username}.`);
       setLoginForm((current) => ({ ...current, password: "" }));
 
       router.replace(loginNextPath);
     } catch (error) {
       setIsAuthenticated(false);
+      if (!(error instanceof Error)) {
+        setLoginFailureDetails({
+          reason: "unknown_error",
+          suggestion: "Check the browser console and Next.js terminal logs for more details.",
+        });
+      }
       setMessage(error instanceof Error ? error.message : "Login failed.");
     } finally {
       setIsBusy(false);
@@ -493,38 +513,94 @@ export default function AdminPanel({ loginNextPath = "/admin" }: { loginNextPath
             {message}
           </div>
 
-          <section className="mx-auto w-full max-w-xl rounded-[1.5rem] border border-[var(--line)] bg-[var(--surface-strong)] p-6 shadow-[0_18px_36px_rgba(79,63,37,0.08)] max-[520px]:rounded-[1.2rem] max-[520px]:p-4">
-            <h2 className="text-[1.4rem] font-semibold tracking-[-0.03em] text-[var(--foreground)]">Sign in</h2>
-            <form className="mt-5 grid gap-4" onSubmit={handleLogin}>
-              <label className="grid gap-2">
-                <span className="text-[0.84rem] font-extrabold uppercase tracking-[0.08em] text-[var(--muted)]">Username</span>
-                <input
-                  className="min-h-12 rounded-[1rem] border border-[var(--line)] bg-[var(--surface)] px-4 text-[var(--foreground)] outline-none transition focus:border-[rgba(255,127,102,0.4)] focus:ring-2 focus:ring-[rgba(255,127,102,0.16)]"
-                  value={loginForm.username}
-                  onChange={(event) => setLoginForm((current) => ({ ...current, username: event.target.value }))}
-                  autoComplete="username"
-                />
-              </label>
-              <label className="grid gap-2">
-                <span className="text-[0.84rem] font-extrabold uppercase tracking-[0.08em] text-[var(--muted)]">Password</span>
-                <input
-                  className="min-h-12 rounded-[1rem] border border-[var(--line)] bg-[var(--surface)] px-4 text-[var(--foreground)] outline-none transition focus:border-[rgba(255,127,102,0.4)] focus:ring-2 focus:ring-[rgba(255,127,102,0.16)]"
-                  type="password"
-                  value={loginForm.password}
-                  onChange={(event) => setLoginForm((current) => ({ ...current, password: event.target.value }))}
-                  autoComplete="current-password"
-                />
-              </label>
-              <div className="flex justify-start pt-2">
-                <button
-                  type="submit"
-                  className="inline-flex min-h-12 items-center justify-center rounded-full bg-[#ff7f66] px-6 py-3 font-extrabold text-white shadow-[0_12px_24px_rgba(255,127,102,0.18)] transition duration-200 hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-60"
-                  disabled={isBusy}
-                >
-                  Sign in
-                </button>
+          <section className="mx-auto w-full max-w-3xl rounded-[1.5rem] border border-[var(--line)] bg-[var(--surface-strong)] p-6 shadow-[0_18px_36px_rgba(79,63,37,0.08)] max-[520px]:rounded-[1.2rem] max-[520px]:p-4">
+            <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(18rem,24rem)]">
+              <div>
+                <h2 className="text-[1.4rem] font-semibold tracking-[-0.03em] text-[var(--foreground)]">Sign in</h2>
+                <form className="mt-5 grid gap-4" onSubmit={handleLogin}>
+                  <label className="grid gap-2">
+                    <span className="text-[0.84rem] font-extrabold uppercase tracking-[0.08em] text-[var(--muted)]">Username</span>
+                    <input
+                      className="min-h-12 rounded-[1rem] border border-[var(--line)] bg-[var(--surface)] px-4 text-[var(--foreground)] outline-none transition focus:border-[rgba(255,127,102,0.4)] focus:ring-2 focus:ring-[rgba(255,127,102,0.16)]"
+                      value={loginForm.username}
+                      onChange={(event) => setLoginForm((current) => ({ ...current, username: event.target.value }))}
+                      autoComplete="username"
+                    />
+                  </label>
+                  <label className="grid gap-2">
+                    <span className="text-[0.84rem] font-extrabold uppercase tracking-[0.08em] text-[var(--muted)]">Password</span>
+                    <input
+                      className="min-h-12 rounded-[1rem] border border-[var(--line)] bg-[var(--surface)] px-4 text-[var(--foreground)] outline-none transition focus:border-[rgba(255,127,102,0.4)] focus:ring-2 focus:ring-[rgba(255,127,102,0.16)]"
+                      type="password"
+                      value={loginForm.password}
+                      onChange={(event) => setLoginForm((current) => ({ ...current, password: event.target.value }))}
+                      autoComplete="current-password"
+                    />
+                  </label>
+                  <div className="flex justify-start pt-2">
+                    <button
+                      type="submit"
+                      className="inline-flex min-h-12 items-center justify-center rounded-full bg-[#ff7f66] px-6 py-3 font-extrabold text-white shadow-[0_12px_24px_rgba(255,127,102,0.18)] transition duration-200 hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-60"
+                      disabled={isBusy}
+                    >
+                      Sign in
+                    </button>
+                  </div>
+                </form>
               </div>
-            </form>
+
+              <aside className="rounded-[1.2rem] border border-[var(--line)] bg-[var(--surface)] p-4 text-sm shadow-[0_12px_24px_rgba(79,63,37,0.06)]">
+                <h3 className="text-[1rem] font-semibold text-[var(--foreground)]">Login diagnostics</h3>
+                {loginFailureDetails ? (
+                  <div className="mt-4 grid gap-3 text-[var(--muted)]">
+                    <div>
+                      <span className="text-[0.76rem] font-extrabold uppercase tracking-[0.08em]">Reason</span>
+                      <p className="mt-1 break-words text-[var(--foreground)]">{loginFailureDetails.reason || "unknown"}</p>
+                    </div>
+                    {typeof loginFailureDetails.status === "number" && (
+                      <div>
+                        <span className="text-[0.76rem] font-extrabold uppercase tracking-[0.08em]">HTTP status</span>
+                        <p className="mt-1 text-[var(--foreground)]">{loginFailureDetails.status}</p>
+                      </div>
+                    )}
+                    {loginFailureDetails.apiBaseUrl && (
+                      <div>
+                        <span className="text-[0.76rem] font-extrabold uppercase tracking-[0.08em]">API base URL</span>
+                        <p className="mt-1 break-all font-mono text-[0.78rem] text-[var(--foreground)]">{loginFailureDetails.apiBaseUrl}</p>
+                      </div>
+                    )}
+                    {loginFailureDetails.backendUrl && (
+                      <div>
+                        <span className="text-[0.76rem] font-extrabold uppercase tracking-[0.08em]">Backend login URL</span>
+                        <p className="mt-1 break-all font-mono text-[0.78rem] text-[var(--foreground)]">{loginFailureDetails.backendUrl}</p>
+                      </div>
+                    )}
+                    {loginFailureDetails.backendError && (
+                      <div>
+                        <span className="text-[0.76rem] font-extrabold uppercase tracking-[0.08em]">Backend error</span>
+                        <p className="mt-1 break-words text-[var(--foreground)]">{loginFailureDetails.backendError}</p>
+                      </div>
+                    )}
+                    {loginFailureDetails.rawError && (
+                      <div>
+                        <span className="text-[0.76rem] font-extrabold uppercase tracking-[0.08em]">Raw error</span>
+                        <p className="mt-1 break-all font-mono text-[0.78rem] text-[var(--foreground)]">{loginFailureDetails.rawError}</p>
+                      </div>
+                    )}
+                    {loginFailureDetails.suggestion && (
+                      <div>
+                        <span className="text-[0.76rem] font-extrabold uppercase tracking-[0.08em]">Suggested fix</span>
+                        <p className="mt-1 break-words text-[var(--foreground)]">{loginFailureDetails.suggestion}</p>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <p className="mt-3 leading-[1.7] text-[var(--muted)]">
+                    If sign-in fails, this panel will show the backend URL, HTTP status, and the likely reason instead of only saying fetch failed.
+                  </p>
+                )}
+              </aside>
+            </div>
           </section>
         </section>
       </main>

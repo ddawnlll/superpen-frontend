@@ -1,8 +1,8 @@
 "use client";
 
 import type { Release } from "@/lib/superpen-api";
-import { getIntlLocale } from "@/lib/i18n";
 import { buildTrackedDownloadUrl } from "@/lib/download-tracking";
+import { getIntlLocale } from "@/lib/i18n";
 import Reveal from "./Reveal";
 import { useLandingContent, useLocale } from "./LocaleProvider";
 
@@ -73,7 +73,9 @@ export default function CtaSection({ currentRelease, releases }: CtaSectionProps
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-1">
             <a
               className="inline-flex min-h-14 items-center justify-center rounded-full bg-[#ff7f66] px-[1.4rem] py-[0.9rem] text-center font-extrabold text-white shadow-[0_12px_24px_rgba(255,127,102,0.18)] transition duration-200 hover:-translate-y-0.5 dark:shadow-[0_16px_30px_rgba(255,127,102,0.22)] aria-disabled:pointer-events-none aria-disabled:opacity-60"
-              href={buildTrackedDownloadUrl(currentRelease, "CTA download", "cta-download", "/#download")}
+              href={buildTrackedDownloadUrl(currentRelease, "CTA download", "cta-download", "/")}
+              target={currentRelease ? "_blank" : undefined}
+              rel={currentRelease ? "noreferrer" : undefined}
               data-analytics-event="click"
               data-analytics-label="CTA download"
               data-analytics-target="cta-download"
@@ -113,8 +115,10 @@ export default function CtaSection({ currentRelease, releases }: CtaSectionProps
                       release,
                       `Release download ${release.version}`,
                       `release-download-${release.version}`,
-                      "/#download",
+                      "/",
                     )}
+                    target="_blank"
+                    rel="noreferrer"
                     data-analytics-event="click"
                     data-analytics-label={`Release download ${release.version}`}
                     data-analytics-target={`release-download-${release.version}`}

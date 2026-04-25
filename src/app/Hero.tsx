@@ -56,6 +56,8 @@ export default function Hero({ currentRelease }: HeroProps) {
             <a
               className="inline-flex min-h-14 items-center justify-center rounded-full bg-[#ff7f66] px-[1.4rem] py-[0.9rem] font-extrabold text-white shadow-[0_12px_24px_rgba(255,127,102,0.18)] transition duration-200 hover:-translate-y-0.5 dark:shadow-[0_16px_30px_rgba(255,127,102,0.22)] max-[700px]:w-full aria-disabled:pointer-events-none aria-disabled:opacity-60"
               href={buildTrackedDownloadUrl(currentRelease, "Hero download", "hero-download", "/")}
+              target={currentRelease ? "_blank" : undefined}
+              rel={currentRelease ? "noreferrer" : undefined}
               data-analytics-event="click"
               data-analytics-label="Hero download"
               data-analytics-target="hero-download"
